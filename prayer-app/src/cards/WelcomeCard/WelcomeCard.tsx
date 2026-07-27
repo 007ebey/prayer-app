@@ -7,7 +7,7 @@ import {
     Typography,
 } from "../../../primitives";
 
-import { cn } from "../../../utils/cn";
+import { cn } from "../../utils/cn";
 
 import { welcomeCardVariants } from "./WelcomeCard.styles";
 

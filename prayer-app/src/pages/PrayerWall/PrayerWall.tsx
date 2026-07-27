@@ -1,5 +1,5 @@
 ﻿// New file generated from PrayerWall.tsx
-import { cn } from "../../../utils/cn";
+import { cn } from "../../utils/cn";
 
 import {
     prayerWallContentVariants,

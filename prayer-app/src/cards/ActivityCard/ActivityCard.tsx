@@ -6,7 +6,7 @@ import {
     Typography,
 } from "../../../primitives";
 
-import { cn } from "../../../utils/cn";
+import { cn } from "../../utils/cn";
 
 import { activityCardVariants } from "./ActivityCard.styles";
 

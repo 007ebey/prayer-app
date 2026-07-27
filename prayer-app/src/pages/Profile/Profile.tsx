@@ -1,5 +1,5 @@
 ﻿// New file generated from Profile.tsx
-import { cn } from "../../../utils/cn";
+import { cn } from "../../utils/cn";
 
 import {
     profileGridVariants,

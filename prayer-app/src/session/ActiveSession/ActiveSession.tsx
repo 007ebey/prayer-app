@@ -1,7 +1,7 @@
 ﻿// New file generated from ActiveSession.tsx
 import { forwardRef } from "react";
 
-import { cn } from "../../../utils/cn";
+import { cn } from "../../utils/cn";
 
 import {
     activeSessionContentVariants,

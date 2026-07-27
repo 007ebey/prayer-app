@@ -4,7 +4,7 @@ import { forwardRef } from "react";
 import { Loader2 } from "lucide-react";
 
 import Button  from "../../../primitives/Button";
-import { cn } from "../../../utils/cn";
+import { cn } from "../../utils/cn";
 
 import {
     joinButtonVariants,

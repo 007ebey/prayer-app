@@ -1,5 +1,5 @@
 ﻿// New file generated from Dashboard.tsx
-import { cn } from "../../../utils/cn";
+import { cn } from "../../utils/cn";
 
 import {
     dashboardVariants,

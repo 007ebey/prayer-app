@@ -3,7 +3,7 @@ import { forwardRef } from "react";
 
 import { Users } from "lucide-react";
 
-import { cn } from "../../../utils/cn";
+import { cn } from "../../utils/cn";
 
 import {
     participantCounterContentVariants,

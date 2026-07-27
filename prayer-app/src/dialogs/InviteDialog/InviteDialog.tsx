@@ -17,7 +17,7 @@ import {
     Textarea,
 } from "../../../primitives";
 
-import { cn } from "../../../utils/cn";
+import { cn } from "../../utils/cn";
 
 import {
     inviteDialogVariants,

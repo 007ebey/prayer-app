@@ -1,5 +1,5 @@
 ﻿// New file generated from PrayerSession.tsx
-import { cn } from "../../../utils/cn";
+import { cn } from "../../utils/cn";
 
 import {
     prayerContentVariants,

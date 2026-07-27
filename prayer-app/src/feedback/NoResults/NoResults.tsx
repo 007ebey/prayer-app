@@ -5,7 +5,7 @@ import {
 
 import { EmptyState } from "../EmptyState";
 
-import { cn } from "../../../utils/cn";
+import { cn } from "../../utils/cn";
 
 import {
     noResultsVariants,

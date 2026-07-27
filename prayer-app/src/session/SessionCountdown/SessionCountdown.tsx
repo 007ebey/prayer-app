@@ -2,7 +2,7 @@
 import { forwardRef } from "react";
 
 import  Typography  from "../../../primitives/Typography";
-import { cn } from "../../../utils/cn";
+import { cn } from "../../utils/cn";
 
 import {
     sessionCountdownActionsVariants,

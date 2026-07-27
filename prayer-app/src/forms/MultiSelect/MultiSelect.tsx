@@ -19,7 +19,7 @@ import {
     Stack,
 } from "../../../primitives";
 
-import { cn } from "../../../utils/cn";
+import { cn } from "../../utils/cn";
 
 import {
     multiSelectVariants,

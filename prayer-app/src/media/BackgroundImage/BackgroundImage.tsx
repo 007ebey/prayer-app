@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 
-import { cn } from "../../../utils/cn";
+import { cn } from "../../utils/cn";
 
 import { backgroundImageVariants } from "./BackgroundImage.styles";
 

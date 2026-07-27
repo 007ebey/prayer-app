@@ -2,7 +2,7 @@
 import { forwardRef } from "react";
 
 import Badge  from "../../../primitives/Badge";
-import { cn } from "../../../utils/cn";
+import { cn } from "../../utils/cn";
 
 import {
     prayerTagVariants,
