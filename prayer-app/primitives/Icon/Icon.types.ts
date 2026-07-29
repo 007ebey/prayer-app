@@ -1,8 +1,8 @@
-import {
+import type {
     HTMLAttributes
 } from "react";
 
-import {
+import type {
     LucideIcon
 } from "lucide-react";
 

@@ -1,4 +1,4 @@
-import {
+import type {
     ReactNode,
     TextareaHTMLAttributes,
 } from "react";

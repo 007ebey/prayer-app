@@ -1,4 +1,4 @@
-import {
+import type {
     InputHTMLAttributes,
     ReactNode
 } from "react";

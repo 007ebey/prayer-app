@@ -1,5 +1,5 @@
 ﻿// New file generated from FormGroup.tsx
-import {
+import type {
     HTMLAttributes,
     ReactNode,
 } from "react";

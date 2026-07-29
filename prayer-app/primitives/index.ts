@@ -22,3 +22,4 @@ export {default as Dialog} from "./Dialog";
 export {default as Popover} from "./Popover";
 export {default as Calendar} from "./Calendar";
 export {default as FormGroup} from "./FormGroup";
+export {default as Logo} from "./Logo";

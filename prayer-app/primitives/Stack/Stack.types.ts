@@ -1,4 +1,4 @@
-import {
+import type {
     HTMLAttributes,
     ReactNode
 } from "react";
@@ -9,7 +9,8 @@ export type StackGap =
     | "sm"
     | "md"
     | "lg"
-    | "xl";
+    | "xl"
+    | "2xl";
 
 export type StackAlign =
     | "start"
