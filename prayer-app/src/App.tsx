@@ -1,4 +1,5 @@
-import { Stack } from "./../primitives";
+import { Church } from "lucide-react";
+import { Stack, Logo } from "./../primitives";
 
 
 // import BorderRadius from "./theme/BorderRadius";
@@ -9,6 +10,7 @@ import { Stack } from "./../primitives";
 // import TypographyScale from "./theme/TypographyScale";
 
 import "./index.css";
+import ThemeSwitcher from "./theme/ThemeSwitcher";
 
 const App = () => {
     return (
@@ -17,8 +19,13 @@ const App = () => {
                 <Stack gap="2xl">
                      {/* Header */}
                      <div className="flex items-center justify-between">
-                        <Logo />
+                        <Logo 
+                         icon={<Church />}
+                         name="Prayer App"
+                        />
+                        <ThemeSwitcher/>
                      </div>
+                     {/* Hero */}
                 </Stack>
             </div>
         </div>
