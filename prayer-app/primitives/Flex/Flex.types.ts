@@ -35,7 +35,9 @@ export type FlexGap =
     | "sm"
     | "md"
     | "lg"
-    | "xl";
+    | "xl"
+    | "2xl"
+    ;
 
 export interface FlexProps
     extends HTMLAttributes<HTMLDivElement> {

@@ -1,41 +1,24 @@
 import type {
     HTMLAttributes,
-    ReactNode
+    ReactNode,
 } from "react";
 
-export type StackGap =
-    | "none"
-    | "xs"
-    | "sm"
-    | "md"
-    | "lg"
-    | "xl"
-    | "2xl";
-
-export type StackAlign =
-    | "start"
-    | "center"
-    | "end"
-    | "stretch";
-
-export type StackJustify =
-    | "start"
-    | "center"
-    | "end"
-    | "between"
-    | "around"
-    | "evenly";
+import type {
+    FlexGap,
+    FlexAlign,
+    FlexJustify,
+} from "../Flex";
 
 export interface StackProps
     extends HTMLAttributes<HTMLDivElement> {
 
     children: ReactNode;
 
-    gap?: StackGap;
+    gap?: FlexGap;
 
-    align?: StackAlign;
+    align?: FlexAlign;
 
-    justify?: StackJustify;
+    justify?: FlexJustify;
 
     reverse?: boolean;
 }

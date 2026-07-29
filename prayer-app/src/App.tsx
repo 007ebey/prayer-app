@@ -1,5 +1,5 @@
 import { Church } from "lucide-react";
-import { Stack, Logo } from "./../primitives";
+import { Stack, Logo, Surface, Badge } from "./../primitives";
 
 
 // import BorderRadius from "./theme/BorderRadius";
@@ -26,6 +26,17 @@ const App = () => {
                         <ThemeSwitcher/>
                      </div>
                      {/* Hero */}
+                     <Surface
+                        elevation="raised"
+                        padding="xl"
+                        radius="xl"
+                    >
+                        <Stack gap="lg">
+                            <Badge color="success">
+                                LIVE NOW
+                            </Badge>
+                        </Stack>
+                    </Surface>
                 </Stack>
             </div>
         </div>
