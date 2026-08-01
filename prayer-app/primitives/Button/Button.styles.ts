@@ -2,91 +2,87 @@ import { cva } from "class-variance-authority";
 
 export const buttonVariants = cva(
   [
-    "inline-flex",
-    "items-center",
-    "justify-center",
+    "inline-flex items-center justify-center gap-2",
     "font-medium",
-    "transition-all",
-    "duration-200",
-    "select-none",
-    "focus:outline-none",
-    "focus:ring-2",
-    "focus:ring-offset-2",
+    "transition-colors",
+    "focus-visible:outline-none",
+    "focus-visible:ring-2",
+    "focus-visible:ring-primary",
+    "focus-visible:ring-offset-2",
     "disabled:pointer-events-none",
-    "disabled:opacity-50"
+    "disabled:opacity-50",
   ],
   {
     variants: {
-
       variant: {
+        primary: [
+          "bg-primary",
+          "text-primary-foreground",
+          "hover:opacity-90",
+        ],
 
-        primary:
-          "bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-300",
+        secondary: [
+          "bg-secondary",
+          "text-secondary-foreground",
+          "hover:opacity-90",
+        ],
 
-        secondary:
-          "bg-secondary-500 text-white hover:bg-secondary-600 focus:ring-secondary-300",
+        outline: [
+          "border",
+          "border-border",
+          "bg-transparent",
+          "text-foreground",
+          "hover:bg-muted",
+        ],
 
-        outline:
-          "border border-slate-300 bg-white text-slate-800 hover:bg-slate-50",
+        ghost: [
+          "bg-transparent",
+          "text-foreground",
+          "hover:bg-muted",
+        ],
 
-        ghost:
-          "text-slate-700 hover:bg-slate-100",
+        danger: [
+          "bg-destructive",
+          "text-destructive-foreground",
+          "hover:opacity-90",
+        ],
 
-        danger:
-          "bg-red-600 text-white hover:bg-red-700",
-
-        success:
-          "bg-green-600 text-white hover:bg-green-700"
+        success: [
+          "bg-success",
+          "text-success-foreground",
+          "hover:opacity-90",
+        ],
       },
 
       size: {
+        sm: "h-8 px-3 text-sm",
+        md: "h-10 px-4 text-sm",
+        lg: "h-12 px-6 text-base",
 
-        sm:
-          "h-9 px-3 text-sm gap-2",
-
-        md:
-          "h-11 px-5 text-base gap-2",
-
-        lg:
-          "h-14 px-8 text-lg gap-3",
-
-        icon: 
-          "h-10 w-10 p-0",
-
-        iconSm: 
-          "h-8 w-8 p-0",
-
-        iconLg: 
-          "h-12 w-12 p-0"
+        iconSm: "h-8 w-8 p-0",
+        icon: "h-10 w-10 p-0",
+        iconLg: "h-12 w-12 p-0",
       },
 
       rounded: {
-
-        true: "rounded-full",
-
-        false: "rounded-xl"
+        none: "rounded-none",
+        sm: "rounded-sm",
+        md: "rounded-md",
+        lg: "rounded-lg",
+        full: "rounded-full",
       },
 
       fullWidth: {
-
         true: "w-full",
-
-        false: ""
-      }
-
+        false: "",
+      },
     },
 
     defaultVariants: {
-
       variant: "primary",
-
       size: "md",
-
-      rounded: false,
-
-      fullWidth: false
-
-    }
-
+      rounded: "md",
+      fullWidth: false,
+    },
   }
 );

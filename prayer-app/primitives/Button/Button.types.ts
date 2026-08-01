@@ -28,7 +28,7 @@ export interface ButtonProps
 
   fullWidth?: boolean;
 
-  rounded?: boolean;
+  rounded?: "none" | "sm" | "md" | "lg" | "full";
 
   loading?: boolean;
 

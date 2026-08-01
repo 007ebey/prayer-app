@@ -11,125 +11,128 @@ import {
 import { cn } from "../../utils/cn";
 
 const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
-(
-    {
-        src,
-        alt,
-        name,
-        size = "md",
-        shape = "circle",
-        status,
-        bordered = false,
-        className,
-        ...props
-    },
-    ref
-) => {
+    (
+        {
+            src,
+            alt,
+            name,
+            size = "md",
+            shape = "circle",
+            status,
+            bordered = false,
+            className,
+            ...props
+        },
+        ref
+    ) => {
 
-    const initials =
-        name
-            ?.split(" ")
-            .map(word => word.charAt(0))
-            .join("")
-            .substring(0, 2)
-            .toUpperCase();
+        const initials = name
+            ? name.includes(" ")
+                ? name
+                    .split(/\s+/)
+                    .map((word) => word[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase()
+                : name.slice(0, 2).toUpperCase()
+            : "?"
 
-    return (
+        return (
 
-        <div
-            ref={ref}
-            className={cn(
-                "relative inline-flex",
-                className
-            )}
-            {...props}
-        >
+            <div
+                ref={ref}
+                className={cn(
+                    "relative inline-flex",
+                    className
+                )}
+                {...props}
+            >
 
-            {
-                src ? (
+                {
+                    src ? (
 
-                    <img
+                        <img
 
-                        src={src}
+                            src={src}
 
-                        alt={alt ?? name}
+                            alt={alt ?? name}
 
-                        className={cn(
+                            className={cn(
 
-                            avatarSizes[size],
+                                avatarSizes[size],
 
-                            avatarShapes[shape],
+                                avatarShapes[shape],
 
-                            "object-cover bg-slate-200",
+                                "object-cover bg-slate-200",
 
-                            bordered &&
+                                bordered &&
                                 "ring-2 ring-white shadow-md"
 
-                        )}
+                            )}
 
-                    />
+                        />
 
-                ) : (
+                    ) : (
 
-                    <div
+                        <div
 
-                        className={cn(
+                            className={cn(
 
-                            avatarSizes[size],
+                                avatarSizes[size],
 
-                            avatarShapes[shape],
+                                avatarShapes[shape],
 
-                            "bg-primary-500 text-white",
+                                "bg-primary-500 text-white",
 
-                            "flex items-center justify-center",
+                                "flex items-center justify-center",
 
-                            "font-semibold",
+                                "font-semibold",
 
-                            bordered &&
+                                bordered &&
                                 "ring-2 ring-white shadow-md"
 
-                        )}
+                            )}
 
-                    >
+                        >
 
-                        {initials ?? "?"}
+                            {initials ?? "?"}
 
-                    </div>
+                        </div>
 
-                )
-            }
+                    )
+                }
 
-            {
-                status && (
+                {
+                    status && (
 
-                    <span
+                        <span
 
-                        className={cn(
+                            className={cn(
 
-                            "absolute",
+                                "absolute",
 
-                            "bottom-0 right-0",
+                                "bottom-0 right-0",
 
-                            "h-3.5 w-3.5",
+                                "h-3.5 w-3.5",
 
-                            "rounded-full",
+                                "rounded-full",
 
-                            "border-2 border-white",
+                                "border-2 border-white",
 
-                            avatarStatus[status]
+                                avatarStatus[status]
 
-                        )}
+                            )}
 
-                    />
+                        />
 
-                )
-            }
+                    )
+                }
 
-        </div>
+            </div>
 
-    );
+        );
 
-});
+    });
 
 Avatar.displayName = "Avatar";
 

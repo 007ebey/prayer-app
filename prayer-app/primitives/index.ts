@@ -24,3 +24,4 @@ export {default as Calendar} from "./Calendar";
 export {default as FormGroup} from "./FormGroup";
 export {default as Logo} from "./Logo";
 export {default as Surface} from "./Surface";
+export {default as AvatarGroup} from "./AvatarGroup";
