@@ -1,5 +1,5 @@
 ﻿// New file generated from PrayerSession.tsx
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 export interface PrayerSessionProps {
 
