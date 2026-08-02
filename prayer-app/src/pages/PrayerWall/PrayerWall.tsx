@@ -15,6 +15,7 @@ import {
     Button,
 } from "./../../../primitives";
 import { useState } from "react";
+import PrayerParticipantList from "../../PrayerParticipantList";
 
 interface PrayerWallProps {
     onLeave: () => void;
@@ -163,109 +164,10 @@ const PrayerWall = ({
 
                     {/* Participants */}
 
-                    <div className="space-y-4">
-
-                        <div className="flex flex-wrap items-center gap-3">
-
-                            <AvatarGroup>
-                                <Avatar name="PE" />
-                                <Avatar name="JS" />
-                                <Avatar name="AM" />
-                                <Avatar name="RK" />
-                            </AvatarGroup>
-
-                            <div className="flex items-center gap-2 text-muted-foreground">
-
-                                <Users className="h-4 w-4" />
-
-                                <span className="text-sm">
-                                    24 people praying
-                                </span>
-
-                            </div>
-
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowParticipants(true)}
-                            >
-                                View all
-                            </Button>
-
-                        </div>
-
-                    </div>
-
-                    {showParticipants && (
-
-                        <div className="mt-6 max-w-md space-y-3">
-
-                            {participants.map((participant) => (
-
-                                <div
-                                    key={participant.id}
-                                    className="
-                    flex
-                    items-center
-                    justify-between
-                    rounded-lg
-                    border
-                    border-border
-                    p-3
-                "
-                                >
-
-                                    <div className="flex items-center gap-3">
-
-                                        <Avatar
-                                            name={participant.name}
-                                        />
-
-                                        <div>
-
-                                            <Typography variant="body-sm">
-                                                {participant.name}
-                                            </Typography>
-
-                                            <Typography
-                                                variant="caption"
-                                                color="muted"
-                                            >
-                                                Praying now
-                                            </Typography>
-
-                                        </div>
-
-                                    </div>
-
-                                    <Button
-                                        variant={
-                                            participant.greeted
-                                                ? "ghost"
-                                                : "outline"
-                                        }
-                                        size="sm"
-                                        disabled={
-                                            participant.greeted
-                                        }
-                                        onClick={() =>
-                                            handleSayHi(
-                                                participant.id
-                                            )
-                                        }
-                                    >
-                                        {participant.greeted
-                                            ? "Hi sent ✓"
-                                            : "👋 Say Hi"}
-                                    </Button>
-
-                                </div>
-
-                            ))}
-
-                        </div>
-
-                    )}
+                    <PrayerParticipantList
+                        participants={participants}
+                        onSayHi={handleSayHi}
+                    />
 
                 </Stack>
             </Surface>
