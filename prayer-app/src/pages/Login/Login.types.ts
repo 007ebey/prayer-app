@@ -1,7 +1,10 @@
-﻿// New file generated from Login.tsx
-import {
+﻿import type {
     ReactNode,
 } from "react";
+
+export type LoginRole =
+    | "participant"
+    | "admin";
 
 export interface LoginProps {
 
@@ -15,10 +18,19 @@ export interface LoginProps {
 
     footer?: ReactNode;
 
-    onGoogleLogin?(): void;
-
-    onInstagramLogin?(): void;
-
     loading?: boolean;
 
+    role?: LoginRole;
+
+    onRoleChange?: (
+        role: LoginRole
+    ) => void;
+
+    onGoogleLogin?: (
+        role: LoginRole
+    ) => void;
+
+    onInstagramLogin?: (
+        role: LoginRole
+    ) => void;
 }

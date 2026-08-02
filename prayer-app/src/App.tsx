@@ -1,74 +1,80 @@
-import { Church } from "lucide-react";
-
 import {
-    Stack,
-    Logo,
-} from "./../primitives";
+    useState,
+} from "react";
 
-import "./index.css";
+import Login from "./pages/Login/Login";
+import Dashboard from "./pages/Dashboard/Dashboard";
+import AdminPage from "./pages/Admin/AdminPage";
 
-import ThemeSwitcher from "./theme/ThemeSwitcher";
-import ActivePrayer from "./ActivePrayer";
-import NoActivePrayer from "./NoActivePrayer";
-import UpcomingPrayers from "./UpcomingPrayers";
-import PrayerWall from "./pages/PrayerWall/PrayerWall";
-import { useState } from "react";
+import type {
+    LoginRole,
+} from "./pages/Login/Login.types";
+
+type AppView =
+    | "login"
+    | "participant"
+    | "admin";
 
 const App = () => {
 
-    // Temporary UI state.
-    // Later this comes from your backend/session state.
-    const hasActivePrayer = true;
-    const [page, setPage] = useState<"home" | "prayer-wall">("home");
+    const [view, setView] =
+        useState<AppView>("login");
 
-     if (page === "prayer-wall") {
-        return (
-            <div className="min-h-screen bg-background">
-                <div className="mx-auto max-w-7xl p-8">
-                    <PrayerWall
-                        onLeave={() => setPage("home")}
-                    />
-                </div>
-            </div>
+    const [loginRole, setLoginRole] =
+        useState<LoginRole>(
+            "participant"
         );
+
+
+    const handleLogin = (
+        role: LoginRole
+    ) => {
+
+        // Temporary UI logic.
+        //
+        // Production:
+        // authenticate provider
+        //       ↓
+        // backend verifies role
+        //       ↓
+        // navigate
+
+        setView(role);
+
+    };
+
+
+    if (view === "admin") {
+
+        return <AdminPage />;
+
     }
 
+
+    if (view === "participant") {
+
+        return <Dashboard />;
+
+    }
+
+
     return (
-        <div className="min-h-screen bg-background">
 
-            <div className="mx-auto max-w-7xl p-8">
+        <Login
+            role={loginRole}
+            onRoleChange={
+                setLoginRole
+            }
+            onGoogleLogin={
+                handleLogin
+            }
+            onInstagramLogin={
+                handleLogin
+            }
+        />
 
-                <Stack gap="2xl">
-
-                    <div className="flex items-center justify-between">
-
-                        <Logo
-                            icon={<Church />}
-                            name="Prayer App"
-                        />
-
-                        <ThemeSwitcher />
-
-                    </div>
-
-                    {hasActivePrayer ? (
-                        <ActivePrayer
-                            onJoin={() => setPage("prayer-wall")}
-                        />
-                    ) : (
-                        <NoActivePrayer />
-                    )}
-
-                    {/* Upcoming */}
-
-                    <UpcomingPrayers />
-
-                </Stack>
-
-            </div>
-
-        </div>
     );
+
 };
 
 export default App;
