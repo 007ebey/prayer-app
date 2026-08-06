@@ -1,7 +1,6 @@
 ﻿import {
     ArrowLeft,
     Church,
-    Users,
     Heart,
 } from "lucide-react";
 
@@ -10,8 +9,6 @@ import {
     Surface,
     Typography,
     Badge,
-    Avatar,
-    AvatarGroup,
     Button,
 } from "./../../../primitives";
 import { useState } from "react";
@@ -54,8 +51,7 @@ const PrayerWall = ({
     onLeave,
 }: PrayerWallProps) => {
 
-    const [showParticipants, setShowParticipants] =
-        useState(false);
+   
 
     const [participants, setParticipants] =
         useState([

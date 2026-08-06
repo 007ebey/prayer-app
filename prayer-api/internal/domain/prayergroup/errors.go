@@ -1,0 +1,12 @@
+package prayergroup
+
+import "errors"
+
+var (
+	ErrIDRequired           = errors.New("prayer group id is required")
+	ErrNameRequired         = errors.New("prayer group name is required")
+	ErrAccessBlocked        = errors.New("prayer group access is blocked")
+	ErrAccessAlreadyGranted = errors.New("prayer group access already granted")
+	ErrSessionAlreadyAdded  = errors.New("prayer session already assigned")
+	ErrSessionNotAssigned   = errors.New("prayer session is not assigned")
+)
