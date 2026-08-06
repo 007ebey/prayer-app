@@ -5,20 +5,18 @@ import (
 	"net/http"
 
 	"github.com/clerk/clerk-sdk-go/v2"
+	clerkuser "github.com/clerk/clerk-sdk-go/v2/user"
 
 	appauth "prayer-api/internal/application/auth"
-	identityauth "prayer-api/internal/auth"
 )
 
 type AuthHandler struct {
-	login    *appauth.Service
-	identity identityauth.Provider
+	login *appauth.Service
 }
 
-func NewAuthHandler(login *appauth.Service, identity identityauth.Provider) *AuthHandler {
+func NewAuthHandler(login *appauth.Service) *AuthHandler {
 	return &AuthHandler{
-		login:    login,
-		identity: identity,
+		login: login,
 	}
 }
 
@@ -31,19 +29,40 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	identity, err := h.identity.GetIdentity(r.Context(), claims.Subject)
+	clerkID := claims.Subject
+
+	clerkUser, err := clerkuser.Get(r.Context(), clerkID)
 	if err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]any{
-			"error": "unable to retrieve identity",
+			"error": "unable to retrieve clerk user",
 		})
 		return
 	}
 
+	name := ""
+
+    if clerkUser.FirstName != nil {
+		name = *clerkUser.FirstName
+    }
+
+	if clerkUser.LastName != nil {
+		if name != "" {
+			name += " "
+		}
+
+		name += *clerkUser.LastName
+  	}
+
+	if name == "" {
+		name = "Prayer User"
+	}
+
+
 	result, err := h.login.Login(
 		r.Context(),
 		appauth.LoginCommand{
-			ExternalID: identity.ExternalID,
-			Name:       identity.Name,
+			ExternalID: clerkID,
+			Name:       name,
 		},
 	)
 

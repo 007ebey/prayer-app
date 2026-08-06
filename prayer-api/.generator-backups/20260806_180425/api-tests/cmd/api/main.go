@@ -3,13 +3,11 @@ package main
 import (
 	"log"
 	"net/http"
-
 	"github.com/clerk/clerk-sdk-go/v2"
 
 	appauth "prayer-api/internal/application/auth"
-	identityauth "prayer-api/internal/auth"
-	"prayer-api/internal/config"
 	httpapi "prayer-api/internal/http"
+	"prayer-api/internal/config"
 	"prayer-api/internal/repository/memory"
 )
 
@@ -19,6 +17,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Configure Clerk.
 	clerk.SetKey(cfg.ClerkSecretKey)
 
 	users := memory.NewUserRepository()
@@ -33,16 +32,10 @@ func main() {
 		ids,
 	)
 
-	identityProvider := identityauth.NewClerkProvider()
-
-	authHandler := httpapi.NewAuthHandler(
-		loginService,
-		identityProvider,
-	)
-
+	authHandler := httpapi.NewAuthHandler(loginService)
 	router := httpapi.NewRouter(authHandler)
 
-	address := ":" + cfg.Port
+	address := ":8181"
 	log.Printf("Prayer API listening on %s", address)
 
 	if err := http.ListenAndServe(address, router); err != nil {
