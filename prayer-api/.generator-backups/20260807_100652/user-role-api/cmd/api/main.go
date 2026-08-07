@@ -8,7 +8,6 @@ import (
 
 	appauth "prayer-api/internal/application/auth"
 	"prayer-api/internal/application/userprofile"
-	"prayer-api/internal/application/userrole"
 	identityauth "prayer-api/internal/auth"
 	"prayer-api/internal/config"
 	httpapi "prayer-api/internal/http"
@@ -41,11 +40,6 @@ func main() {
 		groups,
 	)
 
-	userRoleService := userrole.NewService(
-		users,
-		roles,
-	)
-
 	identityProvider := identityauth.NewClerkProvider()
 
 	authHandler := httpapi.NewAuthHandler(
@@ -57,14 +51,9 @@ func main() {
 		profileService,
 	)
 
-	userRoleHandler := httpapi.NewUserRoleHandler(
-		userRoleService,
-	)
-
 	router := httpapi.NewRouter(
 		authHandler,
 		userHandler,
-		userRoleHandler,
 	)
 
 	address := ":" + cfg.Port

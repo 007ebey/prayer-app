@@ -27,30 +27,9 @@ func NewRoleRepository() *RoleRepository {
 		panic(err)
 	}
 
-
-	adminRole, err := role.New(
-		role.ID("role_admin"),
-		"Administrator",
-		"Administrative access to users, prayer sessions, and access groups.",
-		[]role.Permission{
-			role.PermissionViewPrayerSessions,
-			role.PermissionJoinPrayerSessions,
-			role.PermissionHostPrayerSessions,
-			role.PermissionManagePrayerSessions,
-			role.PermissionManageUsers,
-			role.PermissionManageAccessGroups,
-		},
-		true,
-	)
-
-	if err != nil {
-		panic(err)
-	}
-
 	return &RoleRepository{
 		roles: map[role.ID]*role.Role{
 			memberRole.ID: memberRole,
-			adminRole.ID:  adminRole,
 		},
 		memberRole: memberRole,
 	}

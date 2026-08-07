@@ -1,0 +1,17 @@
+{
+  "project": "prayer-api",
+  "path": "internal/repository/memory/role_repository.go",
+  "admin": {
+    "id": "role_admin",
+    "name": "Administrator",
+    "description": "Administrative access to users, prayer sessions, and access groups.",
+    "permissions": [
+      "PermissionViewPrayerSessions",
+      "PermissionJoinPrayerSessions",
+      "PermissionHostPrayerSessions",
+      "PermissionManagePrayerSessions",
+      "PermissionManageUsers",
+      "PermissionManageAccessGroups"
+    ]
+  }
+}

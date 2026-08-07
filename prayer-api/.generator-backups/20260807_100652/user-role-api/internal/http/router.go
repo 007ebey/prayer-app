@@ -6,7 +6,7 @@ import (
 	clerkhttp "github.com/clerk/clerk-sdk-go/v2/http"
 )
 
-func NewRouter(auth *AuthHandler, users *UserHandler, userRoles *UserRoleHandler) http.Handler {
+func NewRouter(auth *AuthHandler, users *UserHandler) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.Handle(
@@ -20,13 +20,6 @@ func NewRouter(auth *AuthHandler, users *UserHandler, userRoles *UserRoleHandler
 		"GET /api/users/{id}",
 		clerkhttp.RequireHeaderAuthorization()(
 			http.HandlerFunc(users.Get),
-		),
-	)
-
-	mux.Handle(
-		"POST /api/users/{userID}/roles/{roleID}",
-		clerkhttp.RequireHeaderAuthorization()(
-			http.HandlerFunc(userRoles.Assign),
 		),
 	)
 

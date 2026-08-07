@@ -1,0 +1,12 @@
+{
+  "project": "prayer-api",
+  "permission": {
+    "constant": "PermissionManageUsers",
+    "value": "manage_users"
+  },
+  "administrator": {
+    "id": "role_admin",
+    "name": "Administrator",
+    "description": "Administrative user management access."
+  }
+}
