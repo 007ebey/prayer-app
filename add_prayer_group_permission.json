@@ -1,0 +1,6 @@
+{
+  "project": "prayer-api",
+  "permission_file": "internal/domain/role/permission.go",
+  "permission_constant": "PermissionManagePrayerGroups",
+  "permission_value": "prayer_groups:manage"
+}

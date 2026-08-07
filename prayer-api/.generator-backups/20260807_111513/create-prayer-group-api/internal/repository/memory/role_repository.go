@@ -39,8 +39,7 @@ func NewRoleRepository() *RoleRepository {
 			role.PermissionManagePrayerSessions,
 			role.PermissionManageUsers,
 			role.PermissionManageAccessGroups,
-					role.PermissionManagePrayerGroups,
-},
+		},
 		true,
 	)
 

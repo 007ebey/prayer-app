@@ -5,8 +5,6 @@ import (
 	"sync/atomic"
 
 	"prayer-api/internal/domain/user"
-
-	"prayer-api/internal/domain/prayergroup"
 )
 
 type IDGenerator struct {
@@ -20,11 +18,4 @@ func NewIDGenerator() *IDGenerator {
 func (g *IDGenerator) NewUserID() user.ID {
 	id := atomic.AddUint64(&g.next, 1)
 	return user.ID(fmt.Sprintf("user_%d", id))
-}
-
-func (g *IDGenerator) NewPrayerGroupID() prayergroup.ID {
-	id := atomic.AddUint64(&g.next, 1)
-	return prayergroup.ID(
-		fmt.Sprintf("group_%d", id),
-	)
 }

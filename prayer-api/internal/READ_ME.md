@@ -778,23 +778,65 @@ Currently verified behavior includes:
 
 # 21. Current API Status
 
+The API should be developed in dependency order.
+
+Prayer groups must exist before user access can be granted to them, so
+Prayer Group CRUD is implemented before Prayer Group Access management.
+
 | API | Status |
 |---|---|
-| GET /api/health | Implemented |
-| POST /api/auth/login | Implemented |
-| GET /api/users/{id} | Implemented |
-| POST user role | Implemented |
-| DELETE user role | Implemented |
-| POST prayer-group access | Planned |
-| DELETE prayer-group access | Planned |
-| Block prayer-group access | Planned |
-| Unblock prayer-group access | Planned |
-| GET prayer groups | Planned |
-| GET prayer group | Planned |
-| Create prayer group | Planned |
-| Update prayer group | Planned |
-| Delete prayer group | Planned |
-| Prayer session APIs | Planned |
+| GET `/api/health` | Implemented |
+| POST `/api/auth/login` | Implemented |
+| GET `/api/users/{userID}` | Implemented |
+| POST `/api/users/{userID}/roles/{roleID}` | Implemented |
+| DELETE `/api/users/{userID}/roles/{roleID}` | Implemented |
+| POST `/api/prayer-groups` | Planned — Next |
+| GET `/api/prayer-groups` | Planned |
+| GET `/api/prayer-groups/{groupID}` | Planned |
+| PATCH `/api/prayer-groups/{groupID}` | Planned |
+| DELETE `/api/prayer-groups/{groupID}` | Planned |
+| POST `/api/users/{userID}/prayer-groups/{groupID}` | Planned |
+| DELETE `/api/users/{userID}/prayer-groups/{groupID}` | Planned |
+| POST `/api/users/{userID}/prayer-groups/{groupID}/block` | Planned |
+| POST `/api/users/{userID}/prayer-groups/{groupID}/unblock` | Planned |
+| Prayer Session APIs | Planned |
+
+## Dependency Order
+
+The remaining implementation order is:
+
+    Prayer Group CRUD
+            |
+            v
+    Prayer Group Access
+            |
+            v
+    Prayer Sessions
+
+More specifically:
+
+    POST /api/prayer-groups
+            |
+            v
+    GET /api/prayer-groups
+            |
+            v
+    GET /api/prayer-groups/{groupID}
+            |
+            v
+    PATCH /api/prayer-groups/{groupID}
+            |
+            v
+    DELETE /api/prayer-groups/{groupID}
+            |
+            v
+    Grant / Remove / Block / Unblock Access
+            |
+            v
+    Prayer Session APIs
+
+This ordering prevents access-management APIs from depending on
+prayer-group resources that do not yet have a complete lifecycle.
 
 ---
 

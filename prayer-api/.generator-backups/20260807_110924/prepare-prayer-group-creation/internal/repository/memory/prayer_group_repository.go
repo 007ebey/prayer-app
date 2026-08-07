@@ -96,9 +96,6 @@ func (r *PrayerGroupRepository) Save(
 	ctx context.Context,
 	group *prayergroup.PrayerGroup,
 ) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	r.groups[group.ID] = group
 	return nil
 }

@@ -91,14 +91,3 @@ func (r *PrayerGroupRepository) SaveAccess(ctx context.Context, access prayergro
 	r.access[accessKey(access.UserID, access.GroupID)] = access
 	return nil
 }
-
-func (r *PrayerGroupRepository) Save(
-	ctx context.Context,
-	group *prayergroup.PrayerGroup,
-) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	r.groups[group.ID] = group
-	return nil
-}

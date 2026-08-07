@@ -9,7 +9,6 @@ const (
 	PermissionManagePrayerSessions Permission = "prayer_sessions:manage"
 	PermissionManageUsers          Permission = "users:manage"
 	PermissionManageAccessGroups   Permission = "access_groups:manage"
-	PermissionManagePrayerGroups Permission = "prayer_groups:manage"
 )
 
 var AllPermissions = []Permission{
@@ -19,7 +18,6 @@ var AllPermissions = []Permission{
 	PermissionManagePrayerSessions,
 	PermissionManageUsers,
 	PermissionManageAccessGroups,
-	PermissionManagePrayerGroups,
 }
 
 func IsValidPermission(permission Permission) bool {
