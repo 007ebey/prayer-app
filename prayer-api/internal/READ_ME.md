@@ -782,7 +782,7 @@ Currently verified behavior includes:
 |---|---|
 | GET /api/health | Implemented |
 | POST /api/auth/login | Implemented |
-| GET /api/users/{id} | Planned |
+| GET /api/users/{id} | Implemented |
 | POST user role | Planned |
 | DELETE user role | Planned |
 | POST prayer-group access | Planned |

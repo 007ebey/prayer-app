@@ -20,18 +20,6 @@ func NewUserRepository() *UserRepository {
 	}
 }
 
-func (r *UserRepository) FindByID(ctx context.Context, id user.ID) (*user.User, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	found, exists := r.byID[id]
-	if !exists {
-		return nil, nil
-	}
-
-	return found, nil
-}
-
 func (r *UserRepository) FindByExternalID(ctx context.Context, externalID string) (*user.User, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
