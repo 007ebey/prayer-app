@@ -784,7 +784,7 @@ Currently verified behavior includes:
 | POST /api/auth/login | Implemented |
 | GET /api/users/{id} | Implemented |
 | POST user role | Implemented |
-| DELETE user role | Planned |
+| DELETE user role | Implemented |
 | POST prayer-group access | Planned |
 | DELETE prayer-group access | Planned |
 | Block prayer-group access | Planned |

@@ -30,14 +30,6 @@ func NewRouter(auth *AuthHandler, users *UserHandler, userRoles *UserRoleHandler
 		),
 	)
 
-	mux.Handle(
-		"DELETE /api/users/{userID}/roles/{roleID}",
-		clerkhttp.RequireHeaderAuthorization()(
-			http.HandlerFunc(userRoles.Remove),
-		),
-	)
-
-
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{
 			"status": "ok",

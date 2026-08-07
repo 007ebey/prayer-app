@@ -1,0 +1,13 @@
+{
+  "project": "prayer-api",
+  "domain": {
+    "path": "internal/domain/user/user.go",
+    "expected_method": "RemoveRole"
+  },
+  "application": {
+    "path": "internal/application/userrole/remove.go"
+  },
+  "domain_test": {
+    "path": "internal/domain/user/remove_role_test.go"
+  }
+}

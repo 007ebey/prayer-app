@@ -1,0 +1,6 @@
+{
+  "project": "prayer-api",
+  "domain_dir": "internal/domain/user",
+  "test_path": "internal/domain/user/remove_role_test.go",
+  "expected_error_message": "role is not assigned to user"
+}
