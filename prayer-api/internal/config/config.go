@@ -16,7 +16,7 @@ func Load() (Config, error) {
 	// Load .env into process environment.
 	// If .env doesn't exist, continue because production
 	// may provide real environment variables.
-    err := godotenv.Load()
+	err := godotenv.Load()
 
 	if err != nil {
 		return Config{}, fmt.Errorf("failed to load .env: %w", err)

@@ -84,7 +84,6 @@ func (h *UserRoleHandler) Assign(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-
 func (h *UserRoleHandler) Remove(
 	w http.ResponseWriter,
 	r *http.Request,

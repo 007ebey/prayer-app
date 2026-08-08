@@ -50,11 +50,11 @@ func authenticatedRequest(externalID string) *http.Request {
 		nil,
 	)
 
-    claims := &clerk.SessionClaims{
-	  RegisteredClaims: clerk.RegisteredClaims{
-		Subject: externalID,
-	 },
-    }
+	claims := &clerk.SessionClaims{
+		RegisteredClaims: clerk.RegisteredClaims{
+			Subject: externalID,
+		},
+	}
 
 	ctx := clerk.ContextWithSessionClaims(
 		req.Context(),

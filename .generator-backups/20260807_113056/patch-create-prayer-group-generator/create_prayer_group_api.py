@@ -934,44 +934,15 @@ def inspect_wiring(root, config):
 def generate_application(
     constructor,
     id_method,
-    creation_policy,
 ):
     heading("8. GENERATING APPLICATION SERVICE")
 
     if constructor["type"]:
-        configured_group_type = creation_policy.get(
-            "group_type"
-        )
-
-        configured_group_type_source = creation_policy.get(
-            "group_type_source"
-        )
-
-        allow_client_group_type = creation_policy.get(
-            "allow_client_group_type"
-        )
-
-        if configured_group_type != "TypeRegular":
-            fail(
-                "PrayerGroup creation policy must use "
-                "TypeRegular."
-            )
-
-        if configured_group_type_source != "server":
-            fail(
-                "PrayerGroup type must be "
-                "server-controlled."
-            )
-
-        if allow_client_group_type is not False:
-            fail(
-                "PrayerGroup type must not be "
-                "client-controlled."
-            )
-
-        ok(
-            "PrayerGroup creation policy verified: "
-            "TypeRegular"
+        fail(
+            "Existing PrayerGroup constructor requires groupType. "
+            "The requested create API currently only defines name and "
+            "description. Add an explicit API default/type decision "
+            "before generating production code."
         )
 
     if constructor["status"]:
@@ -1143,8 +1114,7 @@ func (s *CreateService) Create(
 \t\tgroupID,
 \t\tcommand.Name,
 \t\tcommand.Description,
-	    prayergroup.TypeRegular,
-	)
+\t)
 
 \tif err != nil {{
 \t\treturn nil, err
@@ -1480,47 +1450,48 @@ def patch_main(
     )
 
     ok("PrayerGroup application import added")
+
     # Find the existing auth handler constructor without assuming
     # its arguments or formatting.
-    auth_match = re.search(
-        r"(?P<block>"
-        r"authHandler\s*:=\s*"
-        r"httpapi\.NewAuthHandler\s*\("
-        r".*?"
-        r"\)"
-        r")",
-        updated,
-        re.DOTALL,
+auth_match = re.search(
+    r"(?P<block>"
+    r"authHandler\s*:=\s*"
+    r"httpapi\.NewAuthHandler\s*\("
+    r".*?"
+    r"\)"
+    r")",
+    updated,
+    re.DOTALL,
+)
+
+if not auth_match:
+    fail(
+        "Could not discover authHandler wiring. "
+        "Refusing unsafe main.go patch."
     )
 
-    if not auth_match:
-        fail(
-            "Could not discover authHandler wiring. "
-            "Refusing unsafe main.go patch."
-        )
+auth_block = auth_match.group("block")
 
-    auth_block = auth_match.group("block")
+info("Discovered authHandler wiring:")
+print("-" * 64)
+print(auth_block)
+print("-" * 64)
 
-    info("Discovered authHandler wiring:")
-    print("-" * 64)
-    print(auth_block)
-    print("-" * 64)
+if "loginService" not in auth_block:
+    fail(
+        "Discovered authHandler does not use loginService. "
+        "Refusing unsafe patch."
+    )
 
-    if "loginService" not in auth_block:
-        fail(
-            "Discovered authHandler does not use loginService. "
-            "Refusing unsafe patch."
-        )
+if "identityProvider" not in auth_block:
+    fail(
+        "Discovered authHandler does not use identityProvider. "
+        "Current application wiring contract was not recognized."
+    )
 
-    if "identityProvider" not in auth_block:
-        fail(
-            "Discovered authHandler does not use identityProvider. "
-            "Current application wiring contract was not recognized."
-        )
+ok("Current AuthHandler contract verified")
 
-    ok("Current AuthHandler contract verified")
-
-    prayer_group_wiring = '''
+prayer_group_wiring = '''
 
 \tprayerGroupCreateService := appprayergroup.NewCreateService(
 \t\tusers,
@@ -1533,35 +1504,35 @@ def patch_main(
 \t\tprayerGroupCreateService,
 \t)'''
 
-    insert_position = auth_match.end()
+insert_position = auth_match.end()
 
-    updated = (
-        updated[:insert_position]
-        + prayer_group_wiring
-        + updated[insert_position:]
+updated = (
+    updated[:insert_position]
+    + prayer_group_wiring
+    + updated[insert_position:]
+)
+
+if (
+    "prayerGroupCreateService := "
+    "appprayergroup.NewCreateService(" not in updated
+):
+    fail(
+        "PrayerGroup create service insertion "
+        "validation failed"
     )
 
-    if (
-        "prayerGroupCreateService := "
-        "appprayergroup.NewCreateService(" not in updated
-    ):
-        fail(
-            "PrayerGroup create service insertion "
-            "validation failed"
-        )
+ok("PrayerGroup create service wiring added")
 
-    ok("PrayerGroup create service wiring added")
+if (
+    "prayerGroupHandler := "
+    "httpapi.NewPrayerGroupHandler(" not in updated
+):
+    fail(
+        "PrayerGroup handler insertion "
+        "validation failed"
+    )
 
-    if (
-        "prayerGroupHandler := "
-        "httpapi.NewPrayerGroupHandler(" not in updated
-    ):
-        fail(
-            "PrayerGroup handler insertion "
-            "validation failed"
-        )
-
-    ok("PrayerGroup handler wiring added")
+ok("PrayerGroup handler wiring added")
 
     # Patch NewRouter call.
     router_match = re.search(
@@ -1684,7 +1655,6 @@ def main():
     application = generate_application(
         constructor,
         id_method,
-        config["creation"],
     )
 
     handler = generate_handler()

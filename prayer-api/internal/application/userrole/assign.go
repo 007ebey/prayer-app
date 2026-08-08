@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	ErrForbidden   = errors.New("forbidden")
+	ErrForbidden    = errors.New("forbidden")
 	ErrUserNotFound = errors.New("user not found")
 	ErrRoleNotFound = errors.New("role not found")
 )

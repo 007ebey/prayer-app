@@ -7,7 +7,6 @@ import (
 	"github.com/clerk/clerk-sdk-go/v2"
 
 	appauth "prayer-api/internal/application/auth"
-	appprayergroup "prayer-api/internal/application/prayergroup"
 	"prayer-api/internal/application/userprofile"
 	"prayer-api/internal/application/userrole"
 	identityauth "prayer-api/internal/auth"
@@ -54,17 +53,6 @@ func main() {
 		identityProvider,
 	)
 
-	prayerGroupCreateService := appprayergroup.NewCreateService(
-		users,
-		roles,
-		groups,
-		ids,
-	)
-
-	prayerGroupHandler := httpapi.NewPrayerGroupHandler(
-		prayerGroupCreateService,
-	)
-
 	userHandler := httpapi.NewUserHandler(
 		profileService,
 	)
@@ -73,10 +61,10 @@ func main() {
 		userRoleService,
 	)
 
-	router := httpapi.NewRouter(authHandler,
+	router := httpapi.NewRouter(
+		authHandler,
 		userHandler,
 		userRoleHandler,
-		prayerGroupHandler,
 	)
 
 	address := ":" + cfg.Port

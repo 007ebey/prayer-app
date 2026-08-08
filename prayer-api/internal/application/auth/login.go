@@ -41,7 +41,7 @@ type LoginCommand struct {
 }
 
 type LoginResult struct {
-	User             *user.User
+	User              *user.User
 	PrayerGroupAccess []prayergroup.Access
 	Created           bool
 }

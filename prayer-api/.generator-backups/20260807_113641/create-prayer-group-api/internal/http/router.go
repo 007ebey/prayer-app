@@ -6,9 +6,7 @@ import (
 	clerkhttp "github.com/clerk/clerk-sdk-go/v2/http"
 )
 
-func NewRouter(auth *AuthHandler, users *UserHandler, userRoles *UserRoleHandler,
-	prayerGroupHandler *PrayerGroupHandler,
-) http.Handler {
+func NewRouter(auth *AuthHandler, users *UserHandler, userRoles *UserRoleHandler) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.Handle(
@@ -39,13 +37,12 @@ func NewRouter(auth *AuthHandler, users *UserHandler, userRoles *UserRoleHandler
 		),
 	)
 
+
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{
 			"status": "ok",
 		})
 	})
-
-	mux.HandleFunc("POST /api/prayer-groups", prayerGroupHandler.Create)
 
 	return mux
 }

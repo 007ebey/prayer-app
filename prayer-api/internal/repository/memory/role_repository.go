@@ -27,7 +27,6 @@ func NewRoleRepository() *RoleRepository {
 		panic(err)
 	}
 
-
 	adminRole, err := role.New(
 		role.ID("role_admin"),
 		"Administrator",
@@ -39,8 +38,8 @@ func NewRoleRepository() *RoleRepository {
 			role.PermissionManagePrayerSessions,
 			role.PermissionManageUsers,
 			role.PermissionManageAccessGroups,
-					role.PermissionManagePrayerGroups,
-},
+			role.PermissionManagePrayerGroups,
+		},
 		true,
 	)
 
