@@ -53,13 +53,16 @@ func (f *createFixture) newUser(
 ) *user.User {
 	t.Helper()
 
+	if len(roleIDs) == 0 {
+		t.Fatal("expected at least one role")
+	}
+
 	u, err := user.New(
 		id,
 		externalID,
 		displayName,
-		role.ID("role_members"), // temporary default
+		roleIDs[0],
 	)
-
 	if err != nil {
 		t.Fatalf("creating user: %v", err)
 	}
@@ -70,7 +73,10 @@ func (f *createFixture) newUser(
 		}
 	}
 
-	if err := f.users.Save(f.ctx, u); err != nil {
+	if err := f.users.Save(
+		f.ctx,
+		u,
+	); err != nil {
 		t.Fatalf("saving user: %v", err)
 	}
 

@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -10,9 +11,17 @@ import (
 	appprayergroup "prayer-api/internal/application/prayergroup"
 )
 
-type PrayerGroupHandler struct {
-	create *appprayergroup.CreateService
+type CreatePrayerGroupService interface {
+    Create(
+        ctx context.Context,
+        cmd appprayergroup.CreateCommand,
+    ) (*appprayergroup.CreateResult, error)
 }
+
+type PrayerGroupHandler struct {
+	create CreatePrayerGroupService
+}
+
 
 func NewPrayerGroupHandler(
 	create *appprayergroup.CreateService,
