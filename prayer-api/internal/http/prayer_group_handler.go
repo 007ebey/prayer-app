@@ -22,7 +22,6 @@ type PrayerGroupHandler struct {
 	create CreatePrayerGroupService
 }
 
-
 func NewPrayerGroupHandler(
 	create *appprayergroup.CreateService,
 ) *PrayerGroupHandler {

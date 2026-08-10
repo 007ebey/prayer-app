@@ -1,9 +1,0 @@
-{
-  "generator": "create_prayer_group_api.py",
-  "generator_config": "create_prayer_group_api.json",
-  "expected_policy": {
-    "group_type": "TypeRegular",
-    "group_type_source": "server",
-    "allow_client_group_type": false
-  }
-}

@@ -1,6 +1,0 @@
-{
-  "project": "prayer-api",
-  "repository": "internal/repository/memory/prayer_group_repository.go",
-  "required_method": "Save",
-  "domain_package": "prayer-api/internal/domain/prayergroup"
-}

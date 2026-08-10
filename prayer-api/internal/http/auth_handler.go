@@ -23,6 +23,7 @@ func NewAuthHandler(login *appauth.Service, identity identityauth.Provider) *Aut
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	// Is the Clerk token valid?
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
 		writeJSON(w, http.StatusUnauthorized, map[string]any{
@@ -31,6 +32,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Does the token belong to someone?
 	identity, err := h.identity.GetIdentity(r.Context(), claims.Subject)
 	if err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]any{
@@ -39,6 +41,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Is the token expired?
 	result, err := h.login.Login(
 		r.Context(),
 		appauth.LoginCommand{
