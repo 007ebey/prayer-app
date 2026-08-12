@@ -47,5 +47,6 @@ func NewRouter(auth *AuthHandler, users *UserHandler, userRoles *UserRoleHandler
 
 	mux.HandleFunc("POST /api/prayer-groups", prayerGroupHandler.Create)
 
+	mux.HandleFunc("GET /api/prayer-groups", prayerGroupHandler.Get)
 	return mux
 }

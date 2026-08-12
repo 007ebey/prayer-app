@@ -18,8 +18,16 @@ type CreatePrayerGroupService interface {
     ) (*appprayergroup.CreateResult, error)
 }
 
+type ListPrayerGroupService interface {
+	List(
+		ctx context.Context,
+		cmd appprayergroup.ListQuery,
+	) (*appprayergroup.ListResult, error)
+}
+
 type PrayerGroupHandler struct {
 	create CreatePrayerGroupService
+	list   ListPrayerGroupService
 }
 
 func NewPrayerGroupHandler(
@@ -155,6 +163,99 @@ func (h *PrayerGroupHandler) Create(
 				"description": group.Description,
 				"status":      group.Status,
 			},
+		},
+	)
+}
+
+func (h *PrayerGroupHandler) Get(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	claims, ok := clerk.SessionClaimsFromContext(
+		r.Context(),
+	)
+
+	if !ok {
+		writeJSON(
+			w,
+			http.StatusUnauthorized,
+			map[string]any{
+				"error": "unauthorized",
+			},
+		)
+
+		return
+	}
+
+	result, err := h.list.List(
+		r.Context(),
+		appprayergroup.ListQuery{
+			ActorExternalID: claims.Subject,
+		},
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(
+			err,
+			appprayergroup.ErrUnauthorized,
+		):
+			writeJSON(
+				w,
+				http.StatusUnauthorized,
+				map[string]any{
+					"error": "unauthorized",
+				},
+			)
+
+		case errors.Is(
+			err,
+			appprayergroup.ErrActorNotFound,
+		):
+			writeJSON(
+				w,
+				http.StatusNotFound,
+				map[string]any{
+					"error": "actor not found",
+				},
+			)
+
+		default:
+			writeJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]any{
+					"error": err.Error(),
+				},
+			)
+		}
+
+		return
+	}
+
+	prayerGroups := make(
+		[]map[string]any,
+		0,
+		len(result.PrayerGroups),
+	)
+
+	for _, group := range result.PrayerGroups {
+		prayerGroups = append(
+			prayerGroups,
+			map[string]any{
+				"id":          group.ID,
+				"name":        group.Name,
+				"description": group.Description,
+				"status":      group.Status,
+			},
+		)
+	}
+
+	writeJSON(
+		w,
+		http.StatusOK,
+		map[string]any{
+			"prayerGroups": prayerGroups,
 		},
 	)
 }

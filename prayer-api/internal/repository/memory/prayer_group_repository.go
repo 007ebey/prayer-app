@@ -56,6 +56,21 @@ func (r *PrayerGroupRepository) FindByID(ctx context.Context, id prayergroup.ID)
 	return found, nil
 }
 
+func (r *PrayerGroupRepository) List(
+	ctx context.Context,
+	actorID user.ID,
+	) ([]prayergroup.PrayerGroup, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	result := make([]prayergroup.PrayerGroup, 0, len(r.groups))
+	for _, group := range r.groups {
+		result = append(result, *group)
+	}
+
+	return result, nil
+}
+
 func (r *PrayerGroupRepository) FindAccess(ctx context.Context, userID user.ID, groupID prayergroup.ID) (*prayergroup.Access, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()

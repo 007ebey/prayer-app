@@ -790,7 +790,7 @@ Prayer Group CRUD is implemented before Prayer Group Access management.
 | GET `/api/users/{userID}` | Implemented |
 | POST `/api/users/{userID}/roles/{roleID}` | Implemented |
 | DELETE `/api/users/{userID}/roles/{roleID}` | Implemented |
-| POST `/api/prayer-groups` | Planned — Next |
+| POST `/api/prayer-groups` | Implemented |
 | GET `/api/prayer-groups` | Planned |
 | GET `/api/prayer-groups/{groupID}` | Planned |
 | PATCH `/api/prayer-groups/{groupID}` | Planned |

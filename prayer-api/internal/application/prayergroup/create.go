@@ -41,6 +41,11 @@ type PrayerGroupRepository interface {
 		ctx context.Context,
 		group *domainprayergroup.PrayerGroup,
 	) error
+
+	List(
+		ctx context.Context,
+		actorID user.ID,
+	) ([]domainprayergroup.PrayerGroup, error)
 }
 
 type IDGenerator interface {

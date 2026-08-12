@@ -28,7 +28,7 @@ func (s *ListService) List(
 		return nil, ErrUnauthorized
 	}
 
-	actor, err := s.users.ByExternalID(ctx, query.ActorExternalID)
+	actor, err := s.users.FindByExternalID(ctx, query.ActorExternalID)
 	if err != nil {
 		if errors.Is(err, ErrActorNotFound) {
 			return nil, ErrActorNotFound
@@ -44,4 +44,14 @@ func (s *ListService) List(
 	return &ListResult{
 		PrayerGroups: groups,
 	}, nil
+}
+
+func NewListService(
+	users UserRepository,
+	groups PrayerGroupRepository,
+) *ListService {
+	return &ListService{
+		users:  users,
+		groups: groups,
+	}
 }
