@@ -48,5 +48,13 @@ func NewRouter(auth *AuthHandler, users *UserHandler, userRoles *UserRoleHandler
 	mux.HandleFunc("POST /api/prayer-groups", prayerGroupHandler.Create)
 
 	mux.HandleFunc("GET /api/prayer-groups", prayerGroupHandler.Get)
+
+	mux.Handle(
+		"GET /api/prayer-groups/{groupID}",
+		clerkhttp.RequireHeaderAuthorization()(
+			http.HandlerFunc(prayerGroupHandler.GetByID),
+		),
+	)
+	
 	return mux
 }

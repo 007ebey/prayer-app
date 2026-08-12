@@ -8,6 +8,7 @@ import (
 
 	"github.com/clerk/clerk-sdk-go/v2"
 
+	domainprayergroup "prayer-api/internal/domain/prayergroup"
 	appprayergroup "prayer-api/internal/application/prayergroup"
 )
 
@@ -25,9 +26,17 @@ type ListPrayerGroupService interface {
 	) (*appprayergroup.ListResult, error)
 }
 
+type GetPrayerGroupService interface {
+	Get(
+		ctx context.Context,
+		query appprayergroup.GetQuery,
+	) (*appprayergroup.GetResult, error)
+}	
+
 type PrayerGroupHandler struct {
 	create CreatePrayerGroupService
 	list   ListPrayerGroupService
+	get    GetPrayerGroupService
 }
 
 func NewPrayerGroupHandler(
@@ -256,6 +265,115 @@ func (h *PrayerGroupHandler) Get(
 		http.StatusOK,
 		map[string]any{
 			"prayerGroups": prayerGroups,
+		},
+	)
+}
+
+func (h *PrayerGroupHandler) GetByID(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	claims, ok := clerk.SessionClaimsFromContext(
+		r.Context(),
+	)
+
+	if !ok {
+		writeJSON(
+			w,
+			http.StatusUnauthorized,
+			map[string]any{
+				"error": "unauthorized",
+			},
+		)
+
+		return
+	}
+
+	groupID := r.PathValue("groupID")
+
+	result, err := h.get.Get(
+		r.Context(),
+		appprayergroup.GetQuery{
+			ActorExternalID: claims.Subject,
+			GroupID:         domainprayergroup.ID(groupID),
+		},
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(
+			err,
+			appprayergroup.ErrUnauthorized,
+		):
+			writeJSON(
+				w,
+				http.StatusUnauthorized,
+				map[string]any{
+					"error": "unauthorized",
+				},
+			)
+
+		case errors.Is(
+			err,
+			appprayergroup.ErrActorNotFound,
+		):
+			writeJSON(
+				w,
+				http.StatusNotFound,
+				map[string]any{
+					"error": "actor not found",
+				},
+			)
+
+		case errors.Is(
+			err,
+			appprayergroup.ErrPrayerGroupNotFound,
+		):
+			writeJSON(
+				w,
+				http.StatusNotFound,
+				map[string]any{
+					"error": "prayer group not found",
+				},
+			)
+
+		case errors.Is(
+			err,
+			appprayergroup.ErrForbidden,
+		):
+			writeJSON(
+				w,
+				http.StatusForbidden,
+				map[string]any{
+					"error": "forbidden",
+				},
+			)
+
+		default:
+			writeJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]any{
+					"error": err.Error(),
+				},
+			)
+		}
+
+		return
+	}
+
+	group := result.PrayerGroup
+
+	writeJSON(
+		w,
+		http.StatusOK,
+		map[string]any{
+			"prayerGroup": map[string]any{
+				"id":          group.ID,
+				"name":        group.Name,
+				"description": group.Description,
+				"status":      group.Status,
+			},
 		},
 	)
 }

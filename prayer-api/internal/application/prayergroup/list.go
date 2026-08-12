@@ -16,6 +16,11 @@ type ListService struct {
 	users  UserRepository
 }
 
+type GetService struct {
+	users  UserRepository
+	groups PrayerGroupRepository
+}
+
 type ListResult struct {
 	PrayerGroups []domainprayergroup.PrayerGroup
 }
@@ -51,6 +56,16 @@ func NewListService(
 	groups PrayerGroupRepository,
 ) *ListService {
 	return &ListService{
+		users:  users,
+		groups: groups,
+	}
+}
+
+func NewGetService(
+	users UserRepository,
+	groups PrayerGroupRepository,
+) *GetService {
+	return &GetService{
 		users:  users,
 		groups: groups,
 	}
