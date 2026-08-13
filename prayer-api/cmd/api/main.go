@@ -61,9 +61,26 @@ func main() {
 		ids,
 	)
 
-	prayerGroupHandler := httpapi.NewPrayerGroupHandler(
-		prayerGroupCreateService,
-	)
+	prayerGroupListService := appprayergroup.NewListService(
+	    users,
+	    groups,
+    )
+
+    prayerGroupGetService := appprayergroup.NewGetService(
+	    users,
+	    groups,
+    )
+
+    prayerGroupUpdateService := appprayergroup.NewUpdateService(
+	    groups,
+    )
+
+    prayerGroupHandler := httpapi.NewPrayerGroupHandler(
+	    prayerGroupCreateService,
+	    prayerGroupListService,
+	    prayerGroupGetService,
+	    prayerGroupUpdateService,
+    )
 
 	userHandler := httpapi.NewUserHandler(
 		profileService,

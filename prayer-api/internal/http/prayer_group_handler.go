@@ -33,23 +33,42 @@ type GetPrayerGroupService interface {
 	) (*appprayergroup.GetResult, error)
 }	
 
+type UpdatePrayerGroupService interface {
+	Update(
+		ctx context.Context,
+		req appprayergroup.UpdateRequest,
+	) (*domainprayergroup.PrayerGroup, error)
+}
+
 type PrayerGroupHandler struct {
 	create CreatePrayerGroupService
 	list   ListPrayerGroupService
 	get    GetPrayerGroupService
+	update UpdatePrayerGroupService
 }
 
 func NewPrayerGroupHandler(
-	create *appprayergroup.CreateService,
+	create CreatePrayerGroupService,
+	list ListPrayerGroupService,
+	get GetPrayerGroupService,
+	update UpdatePrayerGroupService,
 ) *PrayerGroupHandler {
 	return &PrayerGroupHandler{
 		create: create,
+		list:   list,
+		get:    get,
+		update: update,
 	}
 }
 
 type createPrayerGroupRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+}
+
+type updatePrayerGroupRequest struct {
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
 }
 
 func (h *PrayerGroupHandler) Create(
@@ -363,6 +382,91 @@ func (h *PrayerGroupHandler) GetByID(
 	}
 
 	group := result.PrayerGroup
+
+	writeJSON(
+		w,
+		http.StatusOK,
+		map[string]any{
+			"prayerGroup": map[string]any{
+				"id":          group.ID,
+				"name":        group.Name,
+				"description": group.Description,
+				"status":      group.Status,
+			},
+		},
+	)
+}
+
+
+func (h *PrayerGroupHandler) Update(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	_, ok := clerk.SessionClaimsFromContext(
+		r.Context(),
+	)
+
+	if !ok {
+		writeJSON(
+			w,
+			http.StatusUnauthorized,
+			map[string]any{
+				"error": "unauthorized",
+			},
+		)
+		return
+	}
+
+	groupID := r.PathValue("groupID")
+
+	var request updatePrayerGroupRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeJSON(
+			w,
+			http.StatusBadRequest,
+			map[string]any{
+				"error": "invalid request body",
+			},
+		)
+		return
+	}
+
+	group, err := h.update.Update(
+		r.Context(),
+		appprayergroup.UpdateRequest{
+			GroupID:     domainprayergroup.ID(groupID),
+			Name:        request.Name,
+			Description: request.Description,
+		},
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(
+			err,
+			appprayergroup.ErrPrayerGroupNotFound,
+		):
+			writeJSON(
+				w,
+				http.StatusNotFound,
+				map[string]any{
+					"error": "prayer group not found",
+				},
+			)
+
+		default:
+			writeJSON(
+				w,
+				http.StatusBadRequest,
+				map[string]any{
+					"error": err.Error(),
+				},
+			)
+		}
+
+		return
+	}
 
 	writeJSON(
 		w,

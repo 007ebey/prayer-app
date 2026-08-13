@@ -55,6 +55,13 @@ func NewRouter(auth *AuthHandler, users *UserHandler, userRoles *UserRoleHandler
 			http.HandlerFunc(prayerGroupHandler.GetByID),
 		),
 	)
-	
+
+	mux.Handle(
+		"PATCH /api/prayer-groups/{groupID}",
+		clerkhttp.RequireHeaderAuthorization()(
+			http.HandlerFunc(prayerGroupHandler.Update),
+		),
+	)
+
 	return mux
 }
