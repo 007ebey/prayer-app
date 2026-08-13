@@ -117,3 +117,14 @@ func (r *PrayerGroupRepository) Save(
 	r.groups[group.ID] = group
 	return nil
 }
+
+func (r *PrayerGroupRepository) Update(
+	ctx context.Context,
+	group *prayergroup.PrayerGroup,
+) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.groups[group.ID] = group
+	return nil
+}

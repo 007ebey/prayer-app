@@ -89,6 +89,13 @@ func (r *getPrayerGroupRepositoryStub) SaveAccess(
 	return nil
 }
 
+func (r *getPrayerGroupRepositoryStub) Update(
+	ctx context.Context,
+	group *domainprayergroup.PrayerGroup,
+) error {
+	return nil
+}
+
 func TestGetReturnsPrayerGroup(t *testing.T) {
 	userRepo := &getUserRepositoryStub{
 		user: &domainuser.User{
