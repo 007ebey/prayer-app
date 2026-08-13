@@ -793,7 +793,7 @@ Prayer Group CRUD is implemented before Prayer Group Access management.
 | POST `/api/prayer-groups` | Implemented |
 | GET `/api/prayer-groups` | Implemented |
 | GET `/api/prayer-groups/{groupID}` | Implemented |
-| PATCH `/api/prayer-groups/{groupID}` | Planned |
+| PATCH `/api/prayer-groups/{groupID}` | Implemented |
 | DELETE `/api/prayer-groups/{groupID}` | Planned |
 | POST `/api/users/{userID}/prayer-groups/{groupID}` | Planned |
 | DELETE `/api/users/{userID}/prayer-groups/{groupID}` | Planned |
