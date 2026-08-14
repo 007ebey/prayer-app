@@ -54,10 +54,6 @@ func (s *DeleteService) Delete(
 		return err
 	  }
 
-	  if r == nil {
-		continue
-	  }
-
 	  if r.HasPermission(domainrole.PermissionManagePrayerGroups) {
 		allowed = true
 		break

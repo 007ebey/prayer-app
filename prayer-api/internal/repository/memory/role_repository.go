@@ -62,8 +62,9 @@ func (r *RoleRepository) FindDefaultMemberRole(ctx context.Context) (*role.Role,
 
 func (r *RoleRepository) FindByID(ctx context.Context, id role.ID) (*role.Role, error) {
 	found, exists := r.roles[id]
+	
 	if !exists {
-		return nil, nil
+		return nil, role.ErrNotFound
 	}
 
 	return found, nil
