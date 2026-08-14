@@ -52,6 +52,10 @@ type PrayerGroupRepository interface {
 		group *domainprayergroup.PrayerGroup,
 	) error
 
+	Delete(
+		ctx context.Context,
+		id domainprayergroup.ID,
+	) error
 }
 
 type IDGenerator interface {

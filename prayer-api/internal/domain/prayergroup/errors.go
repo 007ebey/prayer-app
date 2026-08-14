@@ -9,4 +9,5 @@ var (
 	ErrAccessAlreadyGranted = errors.New("prayer group access already granted")
 	ErrSessionAlreadyAdded  = errors.New("prayer session already assigned")
 	ErrSessionNotAssigned   = errors.New("prayer session is not assigned")
+	ErrNotFound  		    = errors.New("prayer group not found")
 )

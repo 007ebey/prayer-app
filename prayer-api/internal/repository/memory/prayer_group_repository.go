@@ -128,3 +128,19 @@ func (r *PrayerGroupRepository) Update(
 	r.groups[group.ID] = group
 	return nil
 }
+
+func (r *PrayerGroupRepository) Delete(
+	ctx context.Context,
+	id prayergroup.ID,
+) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, exists := r.groups[id]; !exists {
+		return prayergroup.ErrNotFound
+	}
+
+	delete(r.groups, id)
+
+	return nil
+}
