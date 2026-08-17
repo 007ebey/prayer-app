@@ -55,6 +55,7 @@ type PrayerGroupHandler struct {
 	get    GetPrayerGroupService
 	update UpdatePrayerGroupService
 	delete DeletePrayerGroupService
+	assign AssignPrayerGroupService
 }
 
 func NewPrayerGroupHandler(
@@ -63,6 +64,7 @@ func NewPrayerGroupHandler(
 	get GetPrayerGroupService,
 	update UpdatePrayerGroupService,
 	delete DeletePrayerGroupService,
+	assign AssignPrayerGroupService,
 ) *PrayerGroupHandler {
 	return &PrayerGroupHandler{
 		create: create,
@@ -70,6 +72,7 @@ func NewPrayerGroupHandler(
 		get:    get,
 		update: update,
 		delete: delete,
+		assign: assign,
 	}
 }
 
@@ -584,6 +587,70 @@ func (h *PrayerGroupHandler) Delete(
 		}
 
 		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *PrayerGroupHandler) AssignPrayerGroup(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	userID := r.PathValue("userID")
+	groupID := r.PathValue("groupID")
+
+	if userID == "" || groupID == "" {
+		writeJSON(
+			w,
+			http.StatusBadRequest,
+			map[string]any{
+				"error": "userID and groupID are required",
+			},
+		)
+		return
+	}()
+ 
+	if err := h.assign.Assign(
+		r.Context(),
+		userID,
+		groupID,
+	); err != nil {
+		switch {
+		case errors.Is(err, domainuser.ErrUserNotFound):
+			writeJSON(
+				w,
+				http.StatusNotFound,
+				map[string]any{
+					"error": "User not found.",
+				},
+			)
+
+		case errors.Is(err, domainuser.ErrPrayerGroupNotFound):
+			writeJSON(
+				w,
+				http.StatusNotFound,
+				map[string]any{
+					"error": "Prayer group not found.",
+				},
+			)
+
+		case errors.Is(err, domainuser.ErrPrayerGroupAlreadyAssigned):
+			writeJSON(
+				w,
+				http.StatusConflict,
+				map[string]any{
+					"error": "User already belongs to the prayer group.",
+				},
+			)
+		default:
+			writeJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]any{
+					"error": "Internal server error.",
+				},
+			)
+		}
 	}
 
 	w.WriteHeader(http.StatusNoContent)

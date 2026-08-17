@@ -63,5 +63,12 @@ func NewRouter(auth *AuthHandler, users *UserHandler, userRoles *UserRoleHandler
 		),
 	)
 
+	mux.Handle(
+		"DELETE /api/prayer-groups/{groupID}",
+		clerkhttp.RequireHeaderAuthorization()(
+			http.HandlerFunc(prayerGroupHandler.Delete),
+		),
+	)
+
 	return mux
 }

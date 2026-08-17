@@ -3,6 +3,7 @@ package user
 import (
 	"strings"
 
+	"prayer-api/internal/domain/prayergroup"
 	"prayer-api/internal/domain/role"
 )
 
@@ -16,11 +17,12 @@ const (
 )
 
 type User struct {
-	ID         ID
-	ExternalID string
-	Name       string
-	Status     Status
-	RoleIDs    []role.ID
+	ID              ID
+	ExternalID      string
+	Name            string
+	Status          Status
+	RoleIDs         []role.ID
+	PrayerGroupIDs  []prayergroup.ID
 }
 
 func New(
@@ -44,11 +46,12 @@ func New(
 	}
 
 	return &User{
-		ID:         id,
-		ExternalID: externalID,
-		Name:       name,
-		Status:     StatusActive,
-		RoleIDs:    []role.ID{defaultRoleID},
+		ID:             id,
+		ExternalID:     externalID,
+		Name:           name,
+		Status:         StatusActive,
+		RoleIDs:        []role.ID{defaultRoleID},
+		PrayerGroupIDs: []prayergroup.ID{},
 	}, nil
 }
 
@@ -86,4 +89,52 @@ func (u *User) RemoveRole(roleID role.ID) error {
 	}
 
 	return ErrRoleNotAssigned
+}
+
+func (u *User) AssignPrayerGroup(
+	groupID prayergroup.ID,
+) error {
+	for _, existing := range u.PrayerGroupIDs {
+		if existing == groupID {
+			return ErrPrayerGroupAlreadyAssigned
+		}
+	}
+
+	u.PrayerGroupIDs = append(
+		u.PrayerGroupIDs,
+		groupID,
+	)
+
+	return nil
+}
+
+func (u *User) RemovePrayerGroup(
+	groupID prayergroup.ID,
+) error {
+	for index, existing := range u.PrayerGroupIDs {
+		if existing != groupID {
+			continue
+		}
+
+		u.PrayerGroupIDs = append(
+			u.PrayerGroupIDs[:index],
+			u.PrayerGroupIDs[index+1:]...,
+		)
+
+		return nil
+	}
+
+	return ErrPrayerGroupNotAssigned
+}
+
+func (u *User) HasPrayerGroup(
+	groupID prayergroup.ID,
+) bool {
+	for _, existing := range u.PrayerGroupIDs {
+		if existing == groupID {
+			return true
+		}
+	}
+
+	return false
 }
