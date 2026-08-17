@@ -2,18 +2,18 @@ package memory
 
 import (
 	"context"
-
+     "prayer-api/internal/domain/identity"
 	"prayer-api/internal/domain/role"
 )
 
 type RoleRepository struct {
-	roles      map[role.ID]*role.Role
+	roles      map[identity.RoleID]*role.Role
 	memberRole *role.Role
 }
 
 func NewRoleRepository() *RoleRepository {
 	memberRole, err := role.New(
-		role.ID("role_members"),
+		identity.RoleID("role_members"),
 		"Members",
 		"Standard access to prayer sessions.",
 		[]role.Permission{
@@ -28,7 +28,7 @@ func NewRoleRepository() *RoleRepository {
 	}
 
 	adminRole, err := role.New(
-		role.ID("role_admin"),
+		identity.RoleID("role_admin"),
 		"Administrator",
 		"Administrative access to users, prayer sessions, and access groups.",
 		[]role.Permission{
@@ -48,7 +48,7 @@ func NewRoleRepository() *RoleRepository {
 	}
 
 	return &RoleRepository{
-		roles: map[role.ID]*role.Role{
+		roles: map[identity.RoleID]*role.Role{
 			memberRole.ID: memberRole,
 			adminRole.ID:  adminRole,
 		},
@@ -60,7 +60,7 @@ func (r *RoleRepository) FindDefaultMemberRole(ctx context.Context) (*role.Role,
 	return r.memberRole, nil
 }
 
-func (r *RoleRepository) FindByID(ctx context.Context, id role.ID) (*role.Role, error) {
+func (r *RoleRepository) FindByID(ctx context.Context, id identity.RoleID) (*role.Role, error) {
 	found, exists := r.roles[id]
 	
 	if !exists {

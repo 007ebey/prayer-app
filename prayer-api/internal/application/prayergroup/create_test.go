@@ -5,6 +5,7 @@ import (
 	"testing"
 	"errors"
 	domainpg "prayer-api/internal/domain/prayergroup"
+	domainid "prayer-api/internal/domain/identity"
 	"prayer-api/internal/domain/role"
 	"prayer-api/internal/domain/user"
 	"prayer-api/internal/repository/memory"
@@ -46,10 +47,10 @@ func newCreateFixture(t *testing.T) *createFixture {
 
 func (f *createFixture) newUser(
 	t *testing.T,
-	id user.ID,
+	id domainid.UserID,
 	externalID string,
 	displayName string,
-	roleIDs ...role.ID,
+	roleIDs ...domainid.RoleID,
 ) *user.User {
 	t.Helper()
 
@@ -88,10 +89,10 @@ func (f *createFixture) newAdministrator(t *testing.T) *user.User {
 
 	return f.newUser(
 		t,
-		user.ID("user_admin"),
+		domainid.UserID("user_admin"),
 		"clerk_admin",
 		"Administrator",
-		role.ID("role_admin"),
+		domainid.RoleID("role_admin"),
 	)
 }
 
@@ -100,10 +101,10 @@ func (f *createFixture) newMember(t *testing.T) *user.User {
 
 	return f.newUser(
 		t,
-		user.ID("user_member"),
+		domainid.UserID("user_member"),
 		"clerk_member",
 		"Member",
-		role.ID("role_members"),
+		domainid.RoleID("role_members"),
 	)
 }
 
@@ -128,7 +129,7 @@ func (f *createFixture) create(
 func findGroup(
 	t *testing.T,
 	repo *memory.PrayerGroupRepository,
-	id domainpg.ID,
+	id domainid.PrayerGroupID,
 ) *domainpg.PrayerGroup {
 	t.Helper()
 
@@ -149,10 +150,10 @@ func findGroup(
 }
 
 type fixedPrayerGroupIDGenerator struct {
-	id domainpg.ID
+	id domainid.PrayerGroupID
 }
 
-func (g fixedPrayerGroupIDGenerator) NewPrayerGroupID() domainpg.ID {
+func (g fixedPrayerGroupIDGenerator) NewPrayerGroupID() domainid.PrayerGroupID {
 	return g.id
 }
 
@@ -175,7 +176,7 @@ type roleLookupFailsRepository struct {
 
 func (r *roleLookupFailsRepository) FindByID(
 	ctx context.Context,
-	id role.ID,
+	id domainid.RoleID,
 ) (*role.Role, error) {
 	return nil, r.err
 }
@@ -304,7 +305,7 @@ func TestMemberCannotCreatePrayerGroup(t *testing.T) {
 
 	group, err := f.groups.FindByID(
 		f.ctx,
-		domainpg.ID("group_1"),
+		domainid.PrayerGroupID("group_1"),
 	)
 
 	if err != nil {
@@ -345,7 +346,7 @@ func TestUnknownActorCannotCreatePrayerGroup(t *testing.T) {
 	// Verify no prayer group was created.
 	visitor, err := f.groups.FindByID(
 		f.ctx,
-		domainpg.ID("visitor"),
+		domainid.PrayerGroupID("visitor"),
 	)
 
 	if err != nil {
@@ -361,7 +362,7 @@ func TestUnknownActorCannotCreatePrayerGroup(t *testing.T) {
 
 	group, err := f.groups.FindByID(
 		f.ctx,
-		domainpg.ID("group_1"),
+		domainid.PrayerGroupID("group_1"),
 	)
 
 	if err != nil {
@@ -401,7 +402,7 @@ func TestCreatePrayerGroupNameRequired(t *testing.T) {
 
 	group, err := f.groups.FindByID(
 		f.ctx,
-		domainpg.ID("group_1"),
+		domainid.PrayerGroupID("group_1"),
 	)
 
 	if err != nil {
@@ -653,16 +654,16 @@ func TestCreatePrayerGroupDuplicateIDReturnsConflict(t *testing.T) {
 	groups := memory.NewPrayerGroupRepository()
 
 	admin, err := user.New(
-		user.ID("user_admin"),
+		domainid.UserID("user_admin"),
 		"clerk_admin",
 		"Administrator",
-		role.ID("role_members"),
+		domainid.RoleID("role_members"),
 	)
 	if err != nil {
 		t.Fatalf("creating administrator: %v", err)
 	}
 
-	if err := admin.AssignRole(role.ID("role_admin")); err != nil {
+	if err := admin.AssignRole(domainid.RoleID("role_admin")); err != nil {
 		t.Fatalf("assigning administrator role: %v", err)
 	}
 
@@ -671,7 +672,7 @@ func TestCreatePrayerGroupDuplicateIDReturnsConflict(t *testing.T) {
 	}
 
 	existing, err := domainpg.New(
-		domainpg.ID("group_duplicate"),
+		domainid.PrayerGroupID("group_duplicate"),
 		"Existing Group",
 		"Already exists",
 		domainpg.TypeRegular,
@@ -689,7 +690,7 @@ func TestCreatePrayerGroupDuplicateIDReturnsConflict(t *testing.T) {
 		roles,
 		groups,
 		fixedPrayerGroupIDGenerator{
-			id: domainpg.ID("group_duplicate"),
+			id: domainid.PrayerGroupID("group_duplicate"),
 		},
 	)
 
@@ -715,7 +716,7 @@ func TestCreatePrayerGroupDuplicateIDReturnsConflict(t *testing.T) {
 
 	persisted, err := groups.FindByID(
 		ctx,
-		domainpg.ID("group_duplicate"),
+		domainid.PrayerGroupID("group_duplicate"),
 	)
 	if err != nil {
 		t.Fatalf("finding prayer group: %v", err)
@@ -810,7 +811,7 @@ func TestCreatePrayerGroupRejectsWhitespaceOnlyName(t *testing.T) {
 
 	groups, err := f.groups.FindByID(
 		f.ctx,
-		domainpg.ID("group_1"),
+		domainid.PrayerGroupID("group_1"),
 	)
 
 	if err != nil {
@@ -915,7 +916,7 @@ func TestCreatePrayerGroupCannotCreateWhenRepositoryFails(t *testing.T) {
 
 	persisted, err := f.groups.FindByID(
 		f.ctx,
-		domainpg.ID("group_1"),
+		domainid.PrayerGroupID("group_1"),
 	)
 
 	if err != nil {
@@ -970,7 +971,7 @@ func TestCreatePrayerGroupCannotCreateWhenRoleLookupFails(t *testing.T) {
 
 	group, err := f.groups.FindByID(
 		f.ctx,
-		domainpg.ID("group_1"),
+		domainid.PrayerGroupID("group_1"),
 	)
 
 	if err != nil {
@@ -1023,7 +1024,7 @@ func TestCreatePrayerGroupCannotCreateWhenUserLookupFails(t *testing.T) {
 
 	group, err := f.groups.FindByID(
 		f.ctx,
-		domainpg.ID("group_1"),
+		domainid.PrayerGroupID("group_1"),
 	)
 
 	if err != nil {
@@ -1043,7 +1044,7 @@ func TestCreatePrayerGroupUsesGeneratedID(t *testing.T) {
 
 	f.newAdministrator(t)
 
-	const generatedID = domainpg.ID("group_test_123")
+	const generatedID = domainid.PrayerGroupID("group_test_123")
 
 	service := NewCreateService(
 		f.users,

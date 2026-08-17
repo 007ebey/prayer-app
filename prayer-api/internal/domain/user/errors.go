@@ -9,4 +9,5 @@ var (
 	ErrUserBlocked         = errors.New("user is blocked")
 	ErrRoleAlreadyAssigned = errors.New("role already assigned to user")
 	ErrRoleNotAssigned     = errors.New("role is not assigned to user")
+	ErrPrayerGroupAlreadyAssigned = errors.New("prayer group already assigned to user")
 )

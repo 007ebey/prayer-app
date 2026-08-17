@@ -2,9 +2,8 @@ package prayergroup
 
 import (
 	"context"
-	domainprayergroup "prayer-api/internal/domain/prayergroup"
 	domainrole "prayer-api/internal/domain/role"
-	domainuser "prayer-api/internal/domain/user"
+	domainid "prayer-api/internal/domain/identity"
 )
 
 type DeleteService struct {
@@ -27,8 +26,8 @@ func NewDeleteService(
 
 func (s *DeleteService) Delete(
 	ctx context.Context,
-	actorID domainuser.ID,
-	groupID domainprayergroup.ID,
+	actorID domainid.UserID,
+	groupID domainid.PrayerGroupID,
 ) error {
 
 	actor, err := s.users.FindByID(ctx, actorID)

@@ -6,6 +6,7 @@ import (
 	"testing"
 	domainprayergroup "prayer-api/internal/domain/prayergroup"
 	domainuser "prayer-api/internal/domain/user"
+	domainid "prayer-api/internal/domain/identity"
 )
 
 type updatePrayerGroupRepositoryStub struct {
@@ -18,7 +19,7 @@ type updatePrayerGroupRepositoryStub struct {
 
 func (r *updatePrayerGroupRepositoryStub) FindByID(
     ctx context.Context,
-    id domainprayergroup.ID,
+    id domainid.PrayerGroupID,
 ) (*domainprayergroup.PrayerGroup, error) {
     return r.group, r.findErr
 }
@@ -34,7 +35,7 @@ func (r *updatePrayerGroupRepositoryStub) Update(
 
 func (r *updatePrayerGroupRepositoryStub) List(
     ctx context.Context,
-    actorID domainuser.ID,
+    actorID domainid.UserID,
 ) ([]domainprayergroup.PrayerGroup, error) {
     return nil, nil
 }
@@ -48,7 +49,7 @@ func (r *updatePrayerGroupRepositoryStub) Save(
 
 func (r *updatePrayerGroupRepositoryStub) Delete(
     ctx context.Context,
-    id domainprayergroup.ID,
+    id domainid.PrayerGroupID,
 ) error {
     return nil
 }
@@ -116,7 +117,7 @@ func TestUpdateReturnsRenameValidationError(t *testing.T) {
 
 func TestUpdateReturnsRepositoryUpdateError(t *testing.T) {
     group, err := domainprayergroup.New(
-        domainprayergroup.ID("group-1"),
+        domainid.PrayerGroupID("group-1"),
         "Men",
         "Prayer group",
         domainprayergroup.TypeRegular,
@@ -148,7 +149,7 @@ func TestUpdateReturnsRepositoryUpdateError(t *testing.T) {
 
 func TestUpdatePrayerGroup(t *testing.T) {
 	group, err := domainprayergroup.New(
-        domainprayergroup.ID("group-1"),
+        domainid.PrayerGroupID("group-1"),
         "Men",
         "Prayer group",
         domainprayergroup.TypeRegular,

@@ -2,12 +2,8 @@ package user
 
 import (
 	"strings"
-
-	"prayer-api/internal/domain/prayergroup"
-	"prayer-api/internal/domain/role"
+	"prayer-api/internal/domain/identity"
 )
-
-type ID string
 
 type Status string
 
@@ -17,19 +13,19 @@ const (
 )
 
 type User struct {
-	ID              ID
+	ID              identity.UserID
 	ExternalID      string
 	Name            string
 	Status          Status
-	RoleIDs         []role.ID
-	PrayerGroupIDs  []prayergroup.ID
+	RoleIDs         []identity.roleID
+	PrayerGroupIDs  []identity.PrayerGroupID
 }
 
 func New(
-	id ID,
+	id identity.UserID,
 	externalID string,
 	name string,
-	defaultRoleID role.ID,
+	defaultRoleID identity.roleID,
 ) (*User, error) {
 	if id == "" {
 		return nil, ErrIDRequired
@@ -50,8 +46,8 @@ func New(
 		ExternalID:     externalID,
 		Name:           name,
 		Status:         StatusActive,
-		RoleIDs:        []role.ID{defaultRoleID},
-		PrayerGroupIDs: []prayergroup.ID{},
+		RoleIDs:        []identity.roleID{defaultRoleID},
+		PrayerGroupIDs: []identity.PrayerGroupID{},
 	}, nil
 }
 
@@ -67,7 +63,7 @@ func (u *User) Unblock() {
 	u.Status = StatusActive
 }
 
-func (u *User) AssignRole(roleID role.ID) error {
+func (u *User) AssignRole(roleID identity.roleID) error {
 	for _, existing := range u.RoleIDs {
 		if existing == roleID {
 			return ErrRoleAlreadyAssigned
@@ -78,7 +74,7 @@ func (u *User) AssignRole(roleID role.ID) error {
 	return nil
 }
 
-func (u *User) RemoveRole(roleID role.ID) error {
+func (u *User) RemoveRole(roleID identity.roleID) error {
 	for index, existing := range u.RoleIDs {
 		if existing != roleID {
 			continue
@@ -92,7 +88,7 @@ func (u *User) RemoveRole(roleID role.ID) error {
 }
 
 func (u *User) AssignPrayerGroup(
-	groupID prayergroup.ID,
+	groupID identity.PrayerGroupID,
 ) error {
 	for _, existing := range u.PrayerGroupIDs {
 		if existing == groupID {
@@ -109,7 +105,7 @@ func (u *User) AssignPrayerGroup(
 }
 
 func (u *User) RemovePrayerGroup(
-	groupID prayergroup.ID,
+	groupID identity.PrayerGroupID,
 ) error {
 	for index, existing := range u.PrayerGroupIDs {
 		if existing != groupID {
@@ -128,7 +124,7 @@ func (u *User) RemovePrayerGroup(
 }
 
 func (u *User) HasPrayerGroup(
-	groupID prayergroup.ID,
+	groupID identity.PrayerGroupID,
 ) bool {
 	for _, existing := range u.PrayerGroupIDs {
 		if existing == groupID {

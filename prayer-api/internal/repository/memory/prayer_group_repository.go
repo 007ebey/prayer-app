@@ -5,19 +5,19 @@ import (
 	"sync"
 
 	"prayer-api/internal/domain/prayergroup"
-	"prayer-api/internal/domain/user"
+	"prayer-api/internal/domain/identity"
 )
 
 type PrayerGroupRepository struct {
 	mu      sync.RWMutex
 	visitor *prayergroup.PrayerGroup
-	groups  map[prayergroup.ID]*prayergroup.PrayerGroup
+	groups  map[identity.PrayerGroupID]*prayergroup.PrayerGroup
 	access  map[string]prayergroup.Access
 }
 
 func NewPrayerGroupRepository() *PrayerGroupRepository {
 	visitor, err := prayergroup.New(
-		prayergroup.ID("visitor"),
+		identity.PrayerGroupID("visitor"),
 		"Visitor",
 		"Default prayer group access.",
 		prayergroup.TypeVisitor,
@@ -29,14 +29,14 @@ func NewPrayerGroupRepository() *PrayerGroupRepository {
 
 	return &PrayerGroupRepository{
 		visitor: visitor,
-		groups: map[prayergroup.ID]*prayergroup.PrayerGroup{
+		groups: map[identity.PrayerGroupID]*prayergroup.PrayerGroup{
 			visitor.ID: visitor,
 		},
 		access: make(map[string]prayergroup.Access),
 	}
 }
 
-func accessKey(userID user.ID, groupID prayergroup.ID) string {
+func accessKey(userID identity.UserID, groupID identity.PrayerGroupID) string {
 	return string(userID) + ":" + string(groupID)
 }
 
@@ -44,7 +44,7 @@ func (r *PrayerGroupRepository) FindVisitorGroup(ctx context.Context) (*prayergr
 	return r.visitor, nil
 }
 
-func (r *PrayerGroupRepository) FindByID(ctx context.Context, id prayergroup.ID) (*prayergroup.PrayerGroup, error) {
+func (r *PrayerGroupRepository) FindByID(ctx context.Context, id identity.PrayerGroupID) (*prayergroup.PrayerGroup, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -58,7 +58,7 @@ func (r *PrayerGroupRepository) FindByID(ctx context.Context, id prayergroup.ID)
 
 func (r *PrayerGroupRepository) List(
 	ctx context.Context,
-	actorID user.ID,
+	actorID identity.UserID,
 	) ([]prayergroup.PrayerGroup, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -71,7 +71,7 @@ func (r *PrayerGroupRepository) List(
 	return result, nil
 }
 
-func (r *PrayerGroupRepository) FindAccess(ctx context.Context, userID user.ID, groupID prayergroup.ID) (*prayergroup.Access, error) {
+func (r *PrayerGroupRepository) FindAccess(ctx context.Context, userID identity.UserID, groupID identity.PrayerGroupID) (*prayergroup.Access, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -84,7 +84,7 @@ func (r *PrayerGroupRepository) FindAccess(ctx context.Context, userID user.ID, 
 	return &copy, nil
 }
 
-func (r *PrayerGroupRepository) FindAccessByUserID(ctx context.Context, userID user.ID) ([]prayergroup.Access, error) {
+func (r *PrayerGroupRepository) FindAccessByUserID(ctx context.Context, userID identity.UserID) ([]prayergroup.Access, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -131,7 +131,7 @@ func (r *PrayerGroupRepository) Update(
 
 func (r *PrayerGroupRepository) Delete(
 	ctx context.Context,
-	id prayergroup.ID,
+	id identity.PrayerGroupID,
 ) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()

@@ -3,13 +3,14 @@ package prayergroup_test
 import (
 	"testing"
 
+	"prayer-api/internal/domain/identity"
 	"prayer-api/internal/domain/prayergroup"
 	"prayer-api/internal/domain/user"
 )
 
 func TestVisitorGroupIsActive(t *testing.T) {
 	group, err := prayergroup.New(
-		prayergroup.ID("visitor"),
+		identity.PrayerGroupID("visitor"),
 		"Visitor",
 		"Default prayer group access.",
 		prayergroup.TypeVisitor,
@@ -30,8 +31,8 @@ func TestVisitorGroupIsActive(t *testing.T) {
 
 func TestPrayerGroupAccessCanBeBlocked(t *testing.T) {
 	access := prayergroup.NewAccess(
-		user.ID("user_1"),
-		prayergroup.ID("youth"),
+		identity.UserID("user_1"),
+		identity.PrayerGroupID("youth"),
 	)
 
 	if !access.IsActive() {
@@ -57,7 +58,7 @@ func TestPrayerGroupAccessCanBeBlocked(t *testing.T) {
 
 func TestPrayerGroupReplaceSessionsRemovesDuplicates(t *testing.T) {
 	group, err := prayergroup.New(
-		prayergroup.ID("youth"),
+		identity.PrayerGroupID("youth"),
 		"Youth Prayer",
 		"Prayer sessions for youth.",
 		prayergroup.TypeRegular,

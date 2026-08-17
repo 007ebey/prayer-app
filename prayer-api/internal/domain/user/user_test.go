@@ -4,16 +4,16 @@ import (
 	"errors"
 	"testing"
 
-	"prayer-api/internal/domain/role"
+	"prayer-api/internal/domain/identity"
 	"prayer-api/internal/domain/user"
 )
 
 func TestNewUserIsActiveAndGetsDefaultRole(t *testing.T) {
 	u, err := user.New(
-		user.ID("user_1"),
+		identity.UserID("user_1"),
 		"clerk_123",
 		"Anna Mary",
-		role.ID("role_members"),
+		identity.RoleID("role_members"),
 	)
 
 	if err != nil {
@@ -28,17 +28,17 @@ func TestNewUserIsActiveAndGetsDefaultRole(t *testing.T) {
 		t.Fatalf("expected one role, got %d", len(u.RoleIDs))
 	}
 
-	if u.RoleIDs[0] != role.ID("role_members") {
+	if u.RoleIDs[0] != identity.RoleID("role_members") {
 		t.Fatalf("expected role_members, got %s", u.RoleIDs[0])
 	}
 }
 
 func TestUserCanBeBlockedAndUnblocked(t *testing.T) {
 	u, err := user.New(
-		user.ID("user_1"),
+		identity.UserID("user_1"),
 		"clerk_123",
 		"Anna Mary",
-		role.ID("role_members"),
+		identity.RoleID("role_members"),
 	)
 
 	if err != nil {
@@ -64,17 +64,17 @@ func TestUserCanBeBlockedAndUnblocked(t *testing.T) {
 
 func TestDuplicateRoleCannotBeAssigned(t *testing.T) {
 	u, err := user.New(
-		user.ID("user_1"),
+		identity.UserID("user_1"),
 		"clerk_123",
 		"Anna Mary",
-		role.ID("role_members"),
+		identity.RoleID("role_members"),
 	)
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	err = u.AssignRole(role.ID("role_members"))
+	err = u.AssignRole(identity.RoleID("role_members"))
 
 	if !errors.Is(err, user.ErrRoleAlreadyAssigned) {
 		t.Fatalf("expected ErrRoleAlreadyAssigned, got %v", err)

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 	domainprayergroup "prayer-api/internal/domain/prayergroup"
+	domainid "prayer-api/internal/domain/identity"
 )
 
 var (
@@ -14,7 +15,7 @@ var (
 
 type GetQuery struct {
 	ActorExternalID string
-	GroupID         domainprayergroup.ID
+	GroupID         domainid.PrayerGroupID
 }
 
 type GetResult struct {

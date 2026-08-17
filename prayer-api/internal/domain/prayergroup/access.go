@@ -1,6 +1,11 @@
 package prayergroup
 
-import "prayer-api/internal/domain/user"
+import 
+
+(
+	"prayer-api/internal/domain/identity"
+
+)
 
 type AccessStatus string
 
@@ -10,12 +15,12 @@ const (
 )
 
 type Access struct {
-	UserID  user.ID
-	GroupID ID
+	UserID  identity.UserID
+	GroupID identity.PrayerGroupID
 	Status  AccessStatus
 }
 
-func NewAccess(userID user.ID, groupID ID) Access {
+func NewAccess(userID identity.UserID, groupID identity.PrayerGroupID) Access {
 	return Access{
 		UserID:  userID,
 		GroupID: groupID,

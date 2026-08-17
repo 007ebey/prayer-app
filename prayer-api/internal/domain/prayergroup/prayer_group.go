@@ -1,10 +1,12 @@
 package prayergroup
 
-import "strings"
+import 
+(
+	"strings"
+	"prayer-api/internal/domain/identity"
+)
 
 type ID string
-
-type SessionID string
 
 type Type string
 
@@ -21,16 +23,16 @@ const (
 )
 
 type PrayerGroup struct {
-	ID          ID
+	ID          identity.PrayerGroupID
 	Name        string
 	Description string
 	Type        Type
 	Status      Status
-	SessionIDs  []SessionID
+	SessionIDs  []identity.SessionID
 }
 
 func New(
-	id ID,
+	id identity.PrayerGroupID,
 	name string,
 	description string,
 	groupType Type,
@@ -50,7 +52,7 @@ func New(
 		Description: strings.TrimSpace(description),
 		Type:        groupType,
 		Status:      StatusActive,
-		SessionIDs:  []SessionID{},
+		SessionIDs:  []identity.SessionID{},
 	}, nil
 }
 
@@ -77,7 +79,7 @@ func (g *PrayerGroup) ChangeDescription(description string) {
 	g.Description = strings.TrimSpace(description)
 }
 
-func (g *PrayerGroup) AssignSession(sessionID SessionID) error {
+func (g *PrayerGroup) AssignSession(sessionID identity.SessionID) error {
 	for _, existing := range g.SessionIDs {
 		if existing == sessionID {
 			return ErrSessionAlreadyAdded
@@ -88,7 +90,7 @@ func (g *PrayerGroup) AssignSession(sessionID SessionID) error {
 	return nil
 }
 
-func (g *PrayerGroup) RemoveSession(sessionID SessionID) error {
+func (g *PrayerGroup) RemoveSession(sessionID identity.SessionID) error {
 	for index, existing := range g.SessionIDs {
 		if existing != sessionID {
 			continue
@@ -101,9 +103,9 @@ func (g *PrayerGroup) RemoveSession(sessionID SessionID) error {
 	return ErrSessionNotAssigned
 }
 
-func (g *PrayerGroup) ReplaceSessions(sessionIDs []SessionID) {
-	seen := make(map[SessionID]struct{})
-	result := make([]SessionID, 0, len(sessionIDs))
+func (g *PrayerGroup) ReplaceSessions(sessionIDs []identity.SessionID) {
+	seen := make(map[identity.SessionID]struct{})
+	result := make([]identity.SessionID, 0, len(sessionIDs))
 
 	for _, sessionID := range sessionIDs {
 		if _, exists := seen[sessionID]; exists {

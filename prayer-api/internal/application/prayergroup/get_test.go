@@ -7,6 +7,7 @@ import (
 
 	domainprayergroup "prayer-api/internal/domain/prayergroup"
 	domainuser "prayer-api/internal/domain/user"
+	domainid "prayer-api/internal/domain/identity"
 )
 
 type getUserRepositoryStub struct {
@@ -42,7 +43,7 @@ type getPrayerGroupRepositoryStub struct {
 
 func (r *getPrayerGroupRepositoryStub) FindByID(
 	ctx context.Context,
-	id domainprayergroup.ID,
+	id domainid.PrayerGroupID,
 ) (*domainprayergroup.PrayerGroup, error) {
 	return r.group, r.err
 }
@@ -69,7 +70,7 @@ func (r *getPrayerGroupRepositoryStub) Save(
 
 func (r *getPrayerGroupRepositoryStub) Delete(
 	ctx context.Context,
-	id domainprayergroup.ID,
+	id domainid.PrayerGroupID,
 ) error {
 	return nil
 }
@@ -83,8 +84,8 @@ func (r *getPrayerGroupRepositoryStub) List(
 
 func (r *getPrayerGroupRepositoryStub) FindAccess(
 	context.Context,
-	domainuser.ID,
-	domainprayergroup.ID,
+	domainid.UserID,
+	domainid.PrayerGroupID,
 ) (*domainprayergroup.Access, error) {
 	return nil, nil
 }
@@ -112,7 +113,7 @@ func TestGetReturnsPrayerGroup(t *testing.T) {
 
 	groupRepo := &getPrayerGroupRepositoryStub{
 		group: &domainprayergroup.PrayerGroup{
-			ID:          domainprayergroup.ID("group-1"),
+			ID:          domainid.PrayerGroupID("group-1"),
 			Name:        "Youth",
 			Description: "Youth Prayer",
 		},
@@ -127,7 +128,7 @@ func TestGetReturnsPrayerGroup(t *testing.T) {
 		context.Background(),
 		GetQuery{
 			ActorExternalID: "clerk-user",
-			GroupID:         domainprayergroup.ID("group-1"),
+			GroupID:         domainid.PrayerGroupID("group-1"),
 		},
 	)
 
@@ -135,7 +136,7 @@ func TestGetReturnsPrayerGroup(t *testing.T) {
 		t.Fatalf("expected nil error, got %v", err)
 	}
 
-	if result.PrayerGroup.ID != domainprayergroup.ID("group-1") {
+	if result.PrayerGroup.ID != domainid.PrayerGroupID("group-1") {
 		t.Fatalf("unexpected prayer group id")
 	}
 }
@@ -160,7 +161,7 @@ func TestGetReturnsPrayerGroupNotFound(t *testing.T) {
 		context.Background(),
 		GetQuery{
 			ActorExternalID: "clerk-user",
-			GroupID:         domainprayergroup.ID("missing"),
+			GroupID:         domainid.PrayerGroupID("missing"),
 		},
 	)
 
@@ -191,7 +192,7 @@ func TestGetReturnsRepositoryError(t *testing.T) {
 		context.Background(),
 		GetQuery{
 			ActorExternalID: "clerk-user",
-			GroupID:         domainprayergroup.ID("group-1"),
+			GroupID:         domainid.PrayerGroupID("group-1"),
 		},
 	)
 

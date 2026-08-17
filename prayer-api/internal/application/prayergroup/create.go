@@ -27,6 +27,11 @@ type UserRepository interface {
 		ctx context.Context,
 		id user.ID,
 	) (*user.User, error)
+
+	Update(
+		ctx context.Context,
+		u *user.User,
+	) error
 }
 
 type RoleRepository interface {

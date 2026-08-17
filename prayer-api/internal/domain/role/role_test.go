@@ -3,13 +3,14 @@ package role_test
 import (
 	"errors"
 	"testing"
+	"prayer-api/internal/domain/identity"
 
 	"prayer-api/internal/domain/role"
 )
 
 func TestCreateMembersRole(t *testing.T) {
 	r, err := role.New(
-		role.ID("role_members"),
+		identity.RoleID("role_members"),
 		"Members",
 		"Standard access to prayer sessions.",
 		[]role.Permission{

@@ -44,7 +44,22 @@ func (r *UserRepository) FindByExternalID(ctx context.Context, externalID string
 	return found, nil
 }
 
-func (r *UserRepository) Save(ctx context.Context, u *user.User) error {
+func (r *UserRepository) Save(
+	ctx context.Context,
+	u *user.User) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.byID[u.ID] = u
+	r.byExternalID[u.ExternalID] = u
+
+	return nil
+}
+
+func (r *UserRepository) Update(
+	ctx context.Context,
+	u *user.User,
+) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 

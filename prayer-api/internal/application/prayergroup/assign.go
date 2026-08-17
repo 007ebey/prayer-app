@@ -4,14 +4,14 @@ import (
 	"context"
 	"errors"
 
-	domainprayergroup "prayer-api/internal/domain/prayergroup"
 	domainuser "prayer-api/internal/domain/user"
+	domainidentity "prayer-api/internal/domain/identity"
 )
 
 type AssignCommand struct {
 	ActorExternalID string
-	UserID          domainuser.ID
-	GroupID         domainprayergroup.ID
+	UserID          domainidentity.UserID
+	GroupID         domainidentity.PrayerGroupID
 }
 
 type AssignPrayerGroupService struct {

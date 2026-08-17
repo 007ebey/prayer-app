@@ -1,11 +1,12 @@
 package role
 
-import "strings"
-
-type ID string
+import (
+  "strings"
+  "prayer-api/internal/domain/identity"
+)
 
 type Role struct {
-	ID          ID
+	ID          identity.RoleID
 	Name        string
 	Description string
 	Permissions []Permission
@@ -13,7 +14,7 @@ type Role struct {
 }
 
 func New(
-	id ID,
+	id identity.RoleID,
 	name string,
 	description string,
 	permissions []Permission,

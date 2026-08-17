@@ -4,14 +4,13 @@ import (
 	"errors"
 	"testing"
 
-	"prayer-api/internal/domain/role"
 	"prayer-api/internal/domain/user"
 )
 
 func TestRemoveRoleRemovesAssignedRole(t *testing.T) {
 	u := newUserForRemoveRoleTest(t)
 
-	adminRoleID := role.ID("role_admin")
+	adminRoleID := identity.RoleID("role_admin")
 
 	u.AssignRole(adminRoleID)
 
@@ -34,12 +33,12 @@ func TestRemoveRoleNotAssignedDoesNotMutateRoles(t *testing.T) {
 	u := newUserForRemoveRoleTest(t)
 
 	before := append(
-		[]role.ID(nil),
+		[]identity.RoleID(nil),
 		u.RoleIDs...,
 	)
 
 	err := u.RemoveRole(
-		role.ID("role_admin"),
+		identity.RoleID("role_admin"),
 	)
 
 	if !errors.Is(
@@ -75,8 +74,8 @@ func TestRemoveRoleNotAssignedDoesNotMutateRoles(t *testing.T) {
 func TestRemoveRoleDoesNotRemoveOtherRoles(t *testing.T) {
 	u := newUserForRemoveRoleTest(t)
 
-	adminRoleID := role.ID("role_admin")
-	memberRoleID := role.ID("role_members")
+	adminRoleID := identity.RoleID("role_admin")
+	memberRoleID := identity.RoleID("role_members")
 
 	u.AssignRole(adminRoleID)
 
@@ -114,10 +113,10 @@ func newUserForRemoveRoleTest(
 	t.Helper()
 
 	u, err := user.New(
-		user.ID("user_remove_test"),
+		identity.UserID("user_remove_test"),
 		"clerk_remove_test",
 		"Remove Test",
-		role.ID("role_members"),
+		identity.RoleID("role_members"),
 	)
 
 	if err != nil {
@@ -132,7 +131,7 @@ func newUserForRemoveRoleTest(
 
 func hasRoleForRemoveTest(
 	u *user.User,
-	roleID role.ID,
+	roleID identity.RoleID,
 ) bool {
 	for _, current := range u.RoleIDs {
 		if current == roleID {

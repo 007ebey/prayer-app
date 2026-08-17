@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	domainprayergroup "prayer-api/internal/domain/prayergroup"
+	domainid "prayer-api/internal/domain/identity"
 )
 
 type UpdateRequest struct {
-    GroupID     domainprayergroup.ID
+    GroupID     domainid.PrayerGroupID
     Name        *string
     Description *string
 }

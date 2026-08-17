@@ -7,6 +7,7 @@ import (
 
 	domainprayergroup "prayer-api/internal/domain/prayergroup"
 	domainuser "prayer-api/internal/domain/user"
+	domainid "prayer-api/internal/domain/identity"
 )
 
 type userRepositoryStub struct {
@@ -23,7 +24,7 @@ func (r *userRepositoryStub) FindByExternalID(
 
 func (r *userRepositoryStub) FindByID(
 	ctx context.Context,
-	id domainuser.ID,
+	id domainid.UserID,
 ) (*domainuser.User, error) {
 	return nil, nil
 }
@@ -42,7 +43,7 @@ type prayerGroupRepositoryStub struct {
 
 func (r *prayerGroupRepositoryStub) List(
 	ctx context.Context,
-	actorID domainuser.ID,
+	actorID domainid.UserID,
 ) ([]domainprayergroup.PrayerGroup, error) {
 	return r.groups, r.err
 }
