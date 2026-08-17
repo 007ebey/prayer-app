@@ -72,6 +72,9 @@ func (s *Service) Remove(
 	)
 
 	if err != nil {
+		if errors.Is(err, role.ErrNotFound) {
+			return nil, ErrRoleNotFound
+		}
 		return nil, err
 	}
 

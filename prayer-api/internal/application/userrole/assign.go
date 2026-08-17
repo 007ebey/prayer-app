@@ -78,6 +78,9 @@ func (s *Service) Assign(ctx context.Context, cmd AssignCommand) (*AssignResult,
 
 	resolvedRole, err := s.roles.FindByID(ctx, cmd.RoleID)
 	if err != nil {
+		if errors.Is(err, role.ErrNotFound) {
+			return nil, ErrRoleNotFound
+		}
 		return nil, err
 	}
 
