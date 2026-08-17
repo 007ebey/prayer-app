@@ -46,6 +46,13 @@ func (r *updatePrayerGroupRepositoryStub) Save(
     return nil
 }
 
+func (r *updatePrayerGroupRepositoryStub) Delete(
+    ctx context.Context,
+    id domainprayergroup.ID,
+) error {
+    return nil
+}
+
 func TestUpdateReturnsFindError(t *testing.T) {
 	expected := errors.New("database error")
 

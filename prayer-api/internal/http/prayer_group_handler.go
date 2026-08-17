@@ -8,6 +8,7 @@ import (
 
 	"github.com/clerk/clerk-sdk-go/v2"
 
+	domainuser "prayer-api/internal/domain/user"
 	domainprayergroup "prayer-api/internal/domain/prayergroup"
 	appprayergroup "prayer-api/internal/application/prayergroup"
 )
@@ -43,7 +44,7 @@ type UpdatePrayerGroupService interface {
 type DeletePrayerGroupService interface {
 	Delete(
 		ctx context.Context,
-		actorID user.ID,
+		actorID domainuser.ID,
 		groupID domainprayergroup.ID,
 	) error
 }

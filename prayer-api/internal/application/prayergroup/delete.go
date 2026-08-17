@@ -4,6 +4,7 @@ import (
 	"context"
 	domainprayergroup "prayer-api/internal/domain/prayergroup"
 	domainrole "prayer-api/internal/domain/role"
+	domainuser "prayer-api/internal/domain/user"
 )
 
 type DeleteService struct {
@@ -18,15 +19,15 @@ func NewDeleteService(
 	roles RoleRepository,
 ) *DeleteService {
 	return &DeleteService{
-		prayerGroups: prayerGroups,
-		users:        users,
-		roles:          roles,
+		groups: prayerGroups,
+		users:  users,
+		roles:  roles,
 	}
 }
 
 func (s *DeleteService) Delete(
 	ctx context.Context,
-	actorID user.ID,
+	actorID domainuser.ID,
 	groupID domainprayergroup.ID,
 ) error {
 
@@ -35,15 +36,15 @@ func (s *DeleteService) Delete(
 		return err
 	}
 
-	group, err := s.prayerGroups.FindByID(ctx, groupID)
+	_, err = s.groups.FindByID(ctx, groupID)
 	if err != nil {
 		return err
 	}
 
 	// Business rule
-	actor, err := s.users.FindByID(ctx, actorID)
-    if err != nil {
-	  return err
+	actor, err2 := s.users.FindByID(ctx, actorID)
+    if err2 != nil {
+	  return err2
     }
 
 	allowed := false
@@ -64,10 +65,10 @@ func (s *DeleteService) Delete(
 	  return ErrForbidden
     }
 
-	_, err = s.prayerGroups.FindByID(ctx, groupID)
+	_, err = s.groups.FindByID(ctx, groupID)
     if err != nil {
 	  return err
     }
 
-	return s.prayerGroups.Delete(ctx, groupID)
+	return s.groups.Delete(ctx, groupID)
 }

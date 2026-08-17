@@ -78,6 +78,7 @@ func main() {
 	prayerGroupDeleteService := appprayergroup.NewDeleteService(
 		groups,
 		users,
+		roles,
 	)
 
     prayerGroupHandler := httpapi.NewPrayerGroupHandler(

@@ -22,6 +22,11 @@ type UserRepository interface {
 		ctx context.Context,
 		externalID string,
 	) (*user.User, error)
+
+	FindByID(
+		ctx context.Context,
+		id user.ID,
+	) (*user.User, error)
 }
 
 type RoleRepository interface {

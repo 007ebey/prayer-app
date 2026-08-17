@@ -21,7 +21,7 @@ func (r *userRepositoryStub) FindByExternalID(
 	return r.user, r.err
 }
 
-func (r *userRepositoryStub) Find(
+func (r *userRepositoryStub) FindByID(
 	ctx context.Context,
 	id domainuser.ID,
 ) (*domainuser.User, error) {
@@ -64,6 +64,13 @@ func (r *prayerGroupRepositoryStub) FindByName(context.Context, string) (*domain
 func (r *prayerGroupRepositoryStub) Save(
 	ctx context.Context,
 	group *domainprayergroup.PrayerGroup,
+) error {
+	return nil
+}
+
+func (r *prayerGroupRepositoryStub) Delete(
+	ctx context.Context,
+	id domainprayergroup.ID,
 ) error {
 	return nil
 }
