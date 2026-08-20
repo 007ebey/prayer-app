@@ -7,8 +7,7 @@ import (
 	"github.com/clerk/clerk-sdk-go/v2"
 
 	"prayer-api/internal/application/userrole"
-	"prayer-api/internal/domain/role"
-	"prayer-api/internal/domain/user"
+	"prayer-api/internal/domain/identity"
 )
 
 type UserRoleHandler struct {
@@ -30,8 +29,8 @@ func (h *UserRoleHandler) Assign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	targetUserID := user.ID(r.PathValue("userID"))
-	roleID := role.ID(r.PathValue("roleID"))
+	targetUserID := identity.UserID(r.PathValue("userID"))
+	roleID := identity.RoleID(r.PathValue("roleID"))
 
 	result, err := h.service.Assign(
 		r.Context(),
@@ -103,11 +102,11 @@ func (h *UserRoleHandler) Remove(
 		return
 	}
 
-	targetUserID := user.ID(
+	targetUserID := identity.UserID(
 		r.PathValue("userID"),
 	)
 
-	roleID := role.ID(
+	roleID := identity.RoleID(
 		r.PathValue("roleID"),
 	)
 

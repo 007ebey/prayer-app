@@ -10,4 +10,6 @@ var (
 	ErrSessionAlreadyAdded  = errors.New("prayer session already assigned")
 	ErrSessionNotAssigned   = errors.New("prayer session is not assigned")
 	ErrNotFound  		    = errors.New("prayer group not found")
+	ErrPrayerGroupNotFound  = errors.New("prayer group not found")
+	ErrPrayerGroupAlreadyAssigned = errors.New("prayer group already assigned")
 )

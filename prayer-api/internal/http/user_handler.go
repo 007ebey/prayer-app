@@ -7,7 +7,7 @@ import (
 	"github.com/clerk/clerk-sdk-go/v2"
 
 	"prayer-api/internal/application/userprofile"
-	"prayer-api/internal/domain/user"
+	domainid "prayer-api/internal/domain/identity"
 )
 
 type UserHandler struct {
@@ -29,7 +29,7 @@ func (h *UserHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestedUserID := user.ID(r.PathValue("id"))
+	requestedUserID := domainid.UserID(r.PathValue("id"))
 
 	result, err := h.profiles.Get(
 		r.Context(),

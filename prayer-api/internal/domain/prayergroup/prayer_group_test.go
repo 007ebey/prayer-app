@@ -5,7 +5,6 @@ import (
 
 	"prayer-api/internal/domain/identity"
 	"prayer-api/internal/domain/prayergroup"
-	"prayer-api/internal/domain/user"
 )
 
 func TestVisitorGroupIsActive(t *testing.T) {
@@ -68,7 +67,7 @@ func TestPrayerGroupReplaceSessionsRemovesDuplicates(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	group.ReplaceSessions([]prayergroup.SessionID{
+	group.ReplaceSessions([]identity.SessionID{
 		"morning",
 		"evening",
 		"morning",

@@ -10,9 +10,9 @@ import (
 
 	appauth "prayer-api/internal/application/auth"
 	"prayer-api/internal/application/userrole"
-	"prayer-api/internal/domain/role"
 	"prayer-api/internal/domain/user"
 	"prayer-api/internal/repository/memory"
+	"prayer-api/internal/domain/identity"
 )
 
 type userRoleHandlerTestEnvironment struct {
@@ -83,7 +83,7 @@ func createHTTPTestAdministrator(
 		"Administrator",
 	)
 
-	if err := admin.AssignRole(role.ID("role_admin")); err != nil {
+	if err := admin.AssignRole(identity.RoleID("role_admin")); err != nil {
 		t.Fatalf("failed to assign Administrator role: %v", err)
 	}
 

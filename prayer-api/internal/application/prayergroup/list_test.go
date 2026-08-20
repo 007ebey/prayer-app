@@ -78,7 +78,7 @@ func (r *prayerGroupRepositoryStub) Delete(
 
 func (r *prayerGroupRepositoryStub) FindAccess(
 	context.Context,
-	domainuser.ID,
+	domainid.UserID,
 	domainprayergroup.ID,
 ) (*domainprayergroup.Access, error) {
 	return nil, nil
@@ -101,7 +101,7 @@ func (r *prayerGroupRepositoryStub) Update(
 func TestListReturnsPrayerGroups(t *testing.T) {
 	userRepo := &userRepositoryStub{
 		user: &domainuser.User{
-			ID: domainuser.ID("user-1"),
+			ID: domainid.UserID("user-1"),
 		},
 	}
 
@@ -141,7 +141,7 @@ func TestListReturnsPrayerGroups(t *testing.T) {
 func TestListReturnsEmptyList(t *testing.T) {
 	userRepo := &userRepositoryStub{
 		user: &domainuser.User{
-			ID: domainuser.ID("user-1"),
+			ID: domainid.UserID("user-1"),
 		},
 	}
 
@@ -170,7 +170,7 @@ func TestListReturnsRepositoryError(t *testing.T) {
 
 	userRepo := &userRepositoryStub{
 		user: &domainuser.User{
-			ID: domainuser.ID("user-1"),
+			ID: domainid.UserID("user-1"),
 		},
 	}
 

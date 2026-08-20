@@ -3,24 +3,24 @@ package memory
 import (
 	"context"
 	"sync"
-
+    "prayer-api/internal/domain/identity"
 	"prayer-api/internal/domain/user"
 )
 
 type UserRepository struct {
 	mu           sync.RWMutex
-	byID         map[user.ID]*user.User
+	byID         map[identity.UserID]*user.User
 	byExternalID map[string]*user.User
 }
 
 func NewUserRepository() *UserRepository {
 	return &UserRepository{
-		byID:         make(map[user.ID]*user.User),
+		byID:         make(map[identity.UserID]*user.User),
 		byExternalID: make(map[string]*user.User),
 	}
 }
 
-func (r *UserRepository) FindByID(ctx context.Context, id user.ID) (*user.User, error) {
+func (r *UserRepository) FindByID(ctx context.Context, id identity.UserID) (*user.User, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 

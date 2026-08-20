@@ -6,6 +6,7 @@ import (
 
 	domainuser "prayer-api/internal/domain/user"
 	domainidentity "prayer-api/internal/domain/identity"
+	domainrole "prayer-api/internal/domain/role"
 )
 
 type AssignCommand struct {
@@ -17,15 +18,18 @@ type AssignCommand struct {
 type AssignPrayerGroupService struct {
 	users        UserRepository
 	groups       PrayerGroupRepository
+	roles  	     RoleRepository
 }
 
 func NewAssignPrayerGroupService(
 	users UserRepository,
 	groups PrayerGroupRepository,
+	roles RoleRepository,
 ) *AssignPrayerGroupService {
 	return &AssignPrayerGroupService{
 		users:  users,
 		groups: groups,
+		roles:  roles,
 	}
 }
 
@@ -50,9 +54,24 @@ func (s *AssignPrayerGroupService) Assign(
 		return ErrActorNotFound
 	}
 
-	if actor.Role != domainuser.RoleAdmin {
-		return ErrForbidden
-	}
+	allowed := false
+
+    for _, roleID := range actor.RoleIDs {
+      r, err := s.roles.FindByID(ctx, roleID)
+      if err != nil {
+        return err
+      }
+
+      if r != nil &&
+        r.HasPermission(domainrole.PermissionManagePrayerGroups) {
+        allowed = true
+        break
+      }
+    }
+
+    if !allowed {
+      return ErrForbidden
+    }
 
 	user, err := s.users.FindByID(
 		ctx,
@@ -89,7 +108,7 @@ func (s *AssignPrayerGroupService) Assign(
 		return err
 	}
 
-	if err := s.userRepository.Update(
+	if err := s.users.Update(
 		ctx,
 		user,
 	); err != nil {

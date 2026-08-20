@@ -3,7 +3,7 @@ package userrole
 import (
 	"context"
 	"errors"
-
+     "prayer-api/internal/domain/identity"
 	"prayer-api/internal/domain/role"
 	"prayer-api/internal/domain/user"
 )
@@ -15,13 +15,13 @@ var (
 )
 
 type UserRepository interface {
-	FindByID(ctx context.Context, id user.ID) (*user.User, error)
+	FindByID(ctx context.Context, id identity.UserID) (*user.User, error)
 	FindByExternalID(ctx context.Context, externalID string) (*user.User, error)
 	Save(ctx context.Context, u *user.User) error
 }
 
 type RoleRepository interface {
-	FindByID(ctx context.Context, id role.ID) (*role.Role, error)
+	FindByID(ctx context.Context, id identity.RoleID) (*role.Role, error)
 }
 
 type Service struct {
@@ -38,8 +38,8 @@ func NewService(users UserRepository, roles RoleRepository) *Service {
 
 type AssignCommand struct {
 	ActorExternalID string
-	TargetUserID    user.ID
-	RoleID          role.ID
+	TargetUserID    identity.UserID
+	RoleID          identity.RoleID
 }
 
 type AssignResult struct {

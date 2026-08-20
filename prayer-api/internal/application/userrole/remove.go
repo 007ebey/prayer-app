@@ -6,14 +6,15 @@ import (
 
 	"prayer-api/internal/domain/role"
 	"prayer-api/internal/domain/user"
+	"prayer-api/internal/domain/identity"
 )
 
 var ErrProtectedRole = errors.New("protected role")
 
 type RemoveCommand struct {
 	ActorExternalID string
-	TargetUserID    user.ID
-	RoleID          role.ID
+	TargetUserID    identity.UserID
+	RoleID          identity.RoleID
 }
 
 type RemoveResult struct {
@@ -82,7 +83,7 @@ func (s *Service) Remove(
 		return nil, ErrRoleNotFound
 	}
 
-	if resolvedRole.ID == role.ID("role_members") {
+	if resolvedRole.ID == identity.RoleID("role_members") {
 		return nil, ErrProtectedRole
 	}
 

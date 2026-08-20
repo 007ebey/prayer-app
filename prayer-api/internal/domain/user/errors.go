@@ -10,4 +10,6 @@ var (
 	ErrRoleAlreadyAssigned = errors.New("role already assigned to user")
 	ErrRoleNotAssigned     = errors.New("role is not assigned to user")
 	ErrPrayerGroupAlreadyAssigned = errors.New("prayer group already assigned to user")
+	ErrPrayerGroupNotAssigned = errors.New("prayer group is not assigned to user")
+	ErrUserNotFound          = errors.New("user not found")
 )

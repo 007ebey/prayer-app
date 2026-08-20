@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	domainprayergroup "prayer-api/internal/domain/prayergroup"
+	domainid "prayer-api/internal/domain/identity"
 	"prayer-api/internal/domain/role"
 	"prayer-api/internal/domain/user"
 )
@@ -25,7 +26,7 @@ type UserRepository interface {
 
 	FindByID(
 		ctx context.Context,
-		id user.ID,
+		id domainid.UserID,
 	) (*user.User, error)
 
 	Update(
@@ -37,14 +38,14 @@ type UserRepository interface {
 type RoleRepository interface {
 	FindByID(
 		ctx context.Context,
-		id role.ID,
+		id domainid.RoleID,
 	) (*role.Role, error)
 }
 
 type PrayerGroupRepository interface {
 	FindByID(
 		ctx context.Context,
-		id domainprayergroup.ID,
+		id domainid.PrayerGroupID,
 	) (*domainprayergroup.PrayerGroup, error)
 
 	Save(
@@ -54,7 +55,7 @@ type PrayerGroupRepository interface {
 
 	List(
 		ctx context.Context,
-		actorID user.ID,
+		actorID domainid.UserID,
 	) ([]domainprayergroup.PrayerGroup, error)
 
 	Update(
@@ -64,12 +65,12 @@ type PrayerGroupRepository interface {
 
 	Delete(
 		ctx context.Context,
-		id domainprayergroup.ID,
+		id domainid.PrayerGroupID,
 	) error
 }
 
 type IDGenerator interface {
-	NewPrayerGroupID() domainprayergroup.ID
+	NewPrayerGroupID() domainid.PrayerGroupID
 }
 
 type CreateCommand struct {

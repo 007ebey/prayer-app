@@ -7,9 +7,9 @@ import (
 
 	appauth "prayer-api/internal/application/auth"
 	"prayer-api/internal/application/userrole"
-	"prayer-api/internal/domain/role"
 	"prayer-api/internal/domain/user"
 	"prayer-api/internal/repository/memory"
+	"prayer-api/internal/domain/identity"
 )
 
 type testEnvironment struct {
@@ -78,7 +78,7 @@ func createAdministrator(
 		"Administrator",
 	)
 
-	if err := admin.AssignRole(role.ID("role_admin")); err != nil {
+	if err := admin.AssignRole(identity.RoleID("role_admin")); err != nil {
 		t.Fatalf("failed to assign Administrator role: %v", err)
 	}
 
@@ -110,7 +110,7 @@ func TestAdministratorCanAssignRoleToUser(t *testing.T) {
 		userrole.AssignCommand{
 			ActorExternalID: admin.ExternalID,
 			TargetUserID:    target.ID,
-			RoleID:          role.ID("role_admin"),
+			RoleID:          identity.RoleID("role_admin"),
 		},
 	)
 
@@ -130,14 +130,14 @@ func TestAdministratorCanAssignRoleToUser(t *testing.T) {
 		t.Fatal("expected resolved role")
 	}
 
-	if result.Role.ID != role.ID("role_admin") {
+	if result.Role.ID != identity.RoleID("role_admin") {
 		t.Fatalf("expected role_admin, got %s", result.Role.ID)
 	}
 
 	found := false
 
 	for _, roleID := range result.User.RoleIDs {
-		if roleID == role.ID("role_admin") {
+		if roleID == identity.RoleID("role_admin") {
 			found = true
 			break
 		}
@@ -170,7 +170,7 @@ func TestMemberCannotAssignRole(t *testing.T) {
 		userrole.AssignCommand{
 			ActorExternalID: member.ExternalID,
 			TargetUserID:    target.ID,
-			RoleID:          role.ID("role_admin"),
+			RoleID:          identity.RoleID("role_admin"),
 		},
 	)
 
@@ -194,7 +194,7 @@ func TestUnknownActorCannotAssignRole(t *testing.T) {
 		userrole.AssignCommand{
 			ActorExternalID: "clerk_missing_actor",
 			TargetUserID:    target.ID,
-			RoleID:          role.ID("role_admin"),
+			RoleID:          identity.RoleID("role_admin"),
 		},
 	)
 
@@ -216,8 +216,8 @@ func TestAssignRoleTargetUserNotFound(t *testing.T) {
 		context.Background(),
 		userrole.AssignCommand{
 			ActorExternalID: admin.ExternalID,
-			TargetUserID:    user.ID("user_missing"),
-			RoleID:          role.ID("role_admin"),
+			TargetUserID:    identity.UserID("user_missing"),
+			RoleID:          identity.RoleID("role_admin"),
 		},
 	)
 
@@ -247,7 +247,7 @@ func TestAssignRoleRoleNotFound(t *testing.T) {
 		userrole.AssignCommand{
 			ActorExternalID: admin.ExternalID,
 			TargetUserID:    target.ID,
-			RoleID:          role.ID("role_does_not_exist"),
+			RoleID:          identity.RoleID("role_does_not_exist"),
 		},
 	)
 
@@ -275,7 +275,7 @@ func TestAssignRoleIsIdempotent(t *testing.T) {
 	command := userrole.AssignCommand{
 		ActorExternalID: admin.ExternalID,
 		TargetUserID:    target.ID,
-		RoleID:          role.ID("role_admin"),
+		RoleID:          identity.RoleID("role_admin"),
 	}
 
 	first, err := env.userRoles.Assign(
@@ -307,7 +307,7 @@ func TestAssignRoleIsIdempotent(t *testing.T) {
 	count := 0
 
 	for _, roleID := range second.User.RoleIDs {
-		if roleID == role.ID("role_admin") {
+		if roleID == identity.RoleID("role_admin") {
 			count++
 		}
 	}

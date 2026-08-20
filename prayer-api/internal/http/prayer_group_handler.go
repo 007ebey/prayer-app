@@ -10,6 +10,7 @@ import (
 
 	domainuser "prayer-api/internal/domain/user"
 	domainprayergroup "prayer-api/internal/domain/prayergroup"
+    domainid "prayer-api/internal/domain/identity"
 	appprayergroup "prayer-api/internal/application/prayergroup"
 )
 
@@ -44,8 +45,16 @@ type UpdatePrayerGroupService interface {
 type DeletePrayerGroupService interface {
 	Delete(
 		ctx context.Context,
-		actorID domainuser.ID,
-		groupID domainprayergroup.ID,
+		actorID domainid.UserID,
+		groupID domainid.PrayerGroupID,
+	) error
+}
+
+type AssignPrayerGroupService interface {
+	Assign(
+		ctx context.Context,
+		userID domainid.UserID,	
+		groupID domainid.PrayerGroupID,
 	) error
 }
 
@@ -329,7 +338,7 @@ func (h *PrayerGroupHandler) GetByID(
 		r.Context(),
 		appprayergroup.GetQuery{
 			ActorExternalID: claims.Subject,
-			GroupID:         domainprayergroup.ID(groupID),
+			GroupID:         domainid.PrayerGroupID(groupID),
 		},
 	)
 
@@ -449,7 +458,7 @@ func (h *PrayerGroupHandler) Update(
 	group, err := h.update.Update(
 		r.Context(),
 		appprayergroup.UpdateRequest{
-			GroupID:     domainprayergroup.ID(groupID),
+			GroupID:     domainid.PrayerGroupID(groupID),
 			Name:        request.Name,
 			Description: request.Description,
 		},
@@ -516,13 +525,13 @@ func (h *PrayerGroupHandler) Delete(
 		return
 	}
 
-	groupID := domainprayergroup.ID(
+	groupID := domainid.PrayerGroupID(
 		r.PathValue("groupID"),
 	)
 
 	err := h.delete.Delete(
 		r.Context(),
-		domainuser.ID(claims.Subject),
+		domainid.UserID(claims.Subject),
 		groupID,
 	)
 
@@ -608,12 +617,12 @@ func (h *PrayerGroupHandler) AssignPrayerGroup(
 			},
 		)
 		return
-	}()
+	}
  
 	if err := h.assign.Assign(
 		r.Context(),
-		userID,
-		groupID,
+		domainid.UserID(userID),
+		domainid.PrayerGroupID(groupID),
 	); err != nil {
 		switch {
 		case errors.Is(err, domainuser.ErrUserNotFound):
@@ -625,7 +634,7 @@ func (h *PrayerGroupHandler) AssignPrayerGroup(
 				},
 			)
 
-		case errors.Is(err, domainuser.ErrPrayerGroupNotFound):
+		case errors.Is(err, domainprayergroup.ErrPrayerGroupNotFound):
 			writeJSON(
 				w,
 				http.StatusNotFound,
@@ -634,7 +643,7 @@ func (h *PrayerGroupHandler) AssignPrayerGroup(
 				},
 			)
 
-		case errors.Is(err, domainuser.ErrPrayerGroupAlreadyAssigned):
+		case errors.Is(err, domainprayergroup.ErrPrayerGroupAlreadyAssigned):
 			writeJSON(
 				w,
 				http.StatusConflict,

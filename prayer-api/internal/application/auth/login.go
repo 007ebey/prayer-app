@@ -7,6 +7,7 @@ import (
 	"prayer-api/internal/domain/prayergroup"
 	"prayer-api/internal/domain/role"
 	"prayer-api/internal/domain/user"
+	"prayer-api/internal/domain/identity"
 )
 
 var (
@@ -27,12 +28,12 @@ type RoleRepository interface {
 
 type PrayerGroupRepository interface {
 	FindVisitorGroup(ctx context.Context) (*prayergroup.PrayerGroup, error)
-	FindAccess(ctx context.Context, userID user.ID, groupID prayergroup.ID) (*prayergroup.Access, error)
+	FindAccess(ctx context.Context, userID identity.UserID, groupID identity.PrayerGroupID) (*prayergroup.Access, error)
 	SaveAccess(ctx context.Context, access prayergroup.Access) error
 }
 
 type IDGenerator interface {
-	NewUserID() user.ID
+	NewUserID() identity.UserID
 }
 
 type LoginCommand struct {

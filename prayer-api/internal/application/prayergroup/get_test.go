@@ -24,7 +24,7 @@ func (r *getUserRepositoryStub) FindByExternalID(
 
 func (r *getUserRepositoryStub) FindByID(
 	ctx context.Context,
-	id domainuser.ID,
+	id domainid.UserID,
 ) (*domainuser.User, error) {
 	return nil, nil
 }
@@ -77,7 +77,7 @@ func (r *getPrayerGroupRepositoryStub) Delete(
 
 func (r *getPrayerGroupRepositoryStub) List(
 	ctx context.Context,
-	actorID domainuser.ID,
+	actorID domainid.UserID,
 ) ([]domainprayergroup.PrayerGroup, error) {
 	return nil, nil
 }
@@ -107,7 +107,7 @@ func (r *getPrayerGroupRepositoryStub) Update(
 func TestGetReturnsPrayerGroup(t *testing.T) {
 	userRepo := &getUserRepositoryStub{
 		user: &domainuser.User{
-			ID: domainuser.ID("user-1"),
+			ID: domainid.UserID("user-1"),
 		},
 	}
 
@@ -144,7 +144,7 @@ func TestGetReturnsPrayerGroup(t *testing.T) {
 func TestGetReturnsPrayerGroupNotFound(t *testing.T) {
 	userRepo := &getUserRepositoryStub{
 		user: &domainuser.User{
-			ID: domainuser.ID("user-1"),
+			ID: domainid.UserID("user-1"),
 		},
 	}
 
@@ -175,7 +175,7 @@ func TestGetReturnsRepositoryError(t *testing.T) {
 
 	userRepo := &getUserRepositoryStub{
 		user: &domainuser.User{
-			ID: domainuser.ID("user-1"),
+			ID: domainid.UserID("user-1"),
 		},
 	}
 

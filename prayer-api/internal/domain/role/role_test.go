@@ -43,7 +43,7 @@ func TestCreateMembersRole(t *testing.T) {
 
 func TestRoleRejectsUnknownPermission(t *testing.T) {
 	_, err := role.New(
-		role.ID("role_bad"),
+		identity.RoleID("role_bad"),
 		"Bad Role",
 		"Invalid role",
 		[]role.Permission{
@@ -59,7 +59,7 @@ func TestRoleRejectsUnknownPermission(t *testing.T) {
 
 func TestRoleRemovesDuplicatePermissions(t *testing.T) {
 	r, err := role.New(
-		role.ID("role_test"),
+		identity.RoleID("role_test"),
 		"Test",
 		"Test role",
 		[]role.Permission{

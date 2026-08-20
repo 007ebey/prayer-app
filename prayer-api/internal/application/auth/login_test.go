@@ -7,9 +7,9 @@ import (
 
 	appauth "prayer-api/internal/application/auth"
 	"prayer-api/internal/domain/prayergroup"
-	"prayer-api/internal/domain/role"
 	"prayer-api/internal/domain/user"
 	"prayer-api/internal/repository/memory"
+	"prayer-api/internal/domain/identity"
 )
 
 func newTestService() (*appauth.Service, *memory.UserRepository, *memory.PrayerGroupRepository) {
@@ -93,7 +93,7 @@ func TestNewUserGetsMembersRole(t *testing.T) {
 		t.Fatalf("expected exactly one default role, got %d", len(result.User.RoleIDs))
 	}
 
-	if result.User.RoleIDs[0] != role.ID("role_members") {
+	if result.User.RoleIDs[0] != identity.RoleID("role_members") {
 		t.Fatalf("expected role_members, got %s", result.User.RoleIDs[0])
 	}
 }
@@ -119,7 +119,7 @@ func TestNewUserGetsVisitorGroupAccess(t *testing.T) {
 
 	access := result.PrayerGroupAccess[0]
 
-	if access.GroupID != prayergroup.ID("visitor") {
+	if access.GroupID != identity.PrayerGroupID("visitor") {
 		t.Fatalf("expected visitor group, got %s", access.GroupID)
 	}
 

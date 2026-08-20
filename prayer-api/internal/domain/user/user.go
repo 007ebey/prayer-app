@@ -17,7 +17,7 @@ type User struct {
 	ExternalID      string
 	Name            string
 	Status          Status
-	RoleIDs         []identity.roleID
+	RoleIDs         []identity.RoleID
 	PrayerGroupIDs  []identity.PrayerGroupID
 }
 
@@ -25,7 +25,7 @@ func New(
 	id identity.UserID,
 	externalID string,
 	name string,
-	defaultRoleID identity.roleID,
+	defaultRoleID identity.RoleID,
 ) (*User, error) {
 	if id == "" {
 		return nil, ErrIDRequired
@@ -46,7 +46,7 @@ func New(
 		ExternalID:     externalID,
 		Name:           name,
 		Status:         StatusActive,
-		RoleIDs:        []identity.roleID{defaultRoleID},
+		RoleIDs:        []identity.RoleID{defaultRoleID},
 		PrayerGroupIDs: []identity.PrayerGroupID{},
 	}, nil
 }
@@ -63,7 +63,7 @@ func (u *User) Unblock() {
 	u.Status = StatusActive
 }
 
-func (u *User) AssignRole(roleID identity.roleID) error {
+func (u *User) AssignRole(roleID identity.RoleID) error {
 	for _, existing := range u.RoleIDs {
 		if existing == roleID {
 			return ErrRoleAlreadyAssigned
@@ -74,7 +74,7 @@ func (u *User) AssignRole(roleID identity.roleID) error {
 	return nil
 }
 
-func (u *User) RemoveRole(roleID identity.roleID) error {
+func (u *User) RemoveRole(roleID identity.RoleID) error {
 	for index, existing := range u.RoleIDs {
 		if existing != roleID {
 			continue

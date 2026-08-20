@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	"prayer-api/internal/domain/identity"
 	"prayer-api/internal/application/userrole"
-	"prayer-api/internal/domain/role"
 	"prayer-api/internal/domain/user"
 	"prayer-api/internal/repository/memory"
 )
@@ -15,11 +15,11 @@ func TestAdministratorCanRemoveRoleFromUser(t *testing.T) {
 	service, users := newRemoveRoleService(t)
 
 	actor := createRemoveTestUser(t, users, "actor", "clerk_admin")
-	actor.AssignRole(role.ID("role_admin"))
+	actor.AssignRole(identity.RoleID("role_admin"))
 	mustSaveRemoveTestUser(t, users, actor)
 
 	target := createRemoveTestUser(t, users, "target", "clerk_target")
-	target.AssignRole(role.ID("role_admin"))
+	target.AssignRole(identity.RoleID("role_admin"))
 	mustSaveRemoveTestUser(t, users, target)
 
 	result, err := service.Remove(
@@ -27,7 +27,7 @@ func TestAdministratorCanRemoveRoleFromUser(t *testing.T) {
 		userrole.RemoveCommand{
 			ActorExternalID: "clerk_admin",
 			TargetUserID:    target.ID,
-			RoleID:          role.ID("role_admin"),
+			RoleID:          identity.RoleID("role_admin"),
 		},
 	)
 
@@ -39,7 +39,7 @@ func TestAdministratorCanRemoveRoleFromUser(t *testing.T) {
 		t.Fatal("expected removed=true")
 	}
 
-	if hasRemoveTestRole(result.User, role.ID("role_admin")) {
+	if hasRemoveTestRole(result.User, identity.RoleID("role_admin")) {
 		t.Fatal("expected role_admin to be removed")
 	}
 }
@@ -51,7 +51,7 @@ func TestMemberCannotRemoveRole(t *testing.T) {
 	mustSaveRemoveTestUser(t, users, actor)
 
 	target := createRemoveTestUser(t, users, "target", "clerk_target")
-	target.AssignRole(role.ID("role_admin"))
+	target.AssignRole(identity.RoleID("role_admin"))
 	mustSaveRemoveTestUser(t, users, target)
 
 	_, err := service.Remove(
@@ -59,7 +59,7 @@ func TestMemberCannotRemoveRole(t *testing.T) {
 		userrole.RemoveCommand{
 			ActorExternalID: "clerk_member",
 			TargetUserID:    target.ID,
-			RoleID:          role.ID("role_admin"),
+			RoleID:          identity.RoleID("role_admin"),
 		},
 	)
 
@@ -72,7 +72,7 @@ func TestMemberCannotRemoveRole(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !hasRemoveTestRole(stored, role.ID("role_admin")) {
+	if !hasRemoveTestRole(stored, identity.RoleID("role_admin")) {
 		t.Fatal("forbidden removal must not mutate target roles")
 	}
 }
@@ -81,7 +81,7 @@ func TestUnknownActorCannotRemoveRole(t *testing.T) {
 	service, users := newRemoveRoleService(t)
 
 	target := createRemoveTestUser(t, users, "target", "clerk_target")
-	target.AssignRole(role.ID("role_admin"))
+	target.AssignRole(identity.RoleID("role_admin"))
 	mustSaveRemoveTestUser(t, users, target)
 
 	_, err := service.Remove(
@@ -89,7 +89,7 @@ func TestUnknownActorCannotRemoveRole(t *testing.T) {
 		userrole.RemoveCommand{
 			ActorExternalID: "unknown_clerk_user",
 			TargetUserID:    target.ID,
-			RoleID:          role.ID("role_admin"),
+			RoleID:          identity.RoleID("role_admin"),
 		},
 	)
 
@@ -102,15 +102,15 @@ func TestRemoveRoleTargetUserNotFound(t *testing.T) {
 	service, users := newRemoveRoleService(t)
 
 	actor := createRemoveTestUser(t, users, "actor", "clerk_admin")
-	actor.AssignRole(role.ID("role_admin"))
+	actor.AssignRole(identity.RoleID("role_admin"))
 	mustSaveRemoveTestUser(t, users, actor)
 
 	_, err := service.Remove(
 		context.Background(),
 		userrole.RemoveCommand{
 			ActorExternalID: "clerk_admin",
-			TargetUserID:    user.ID("missing_user"),
-			RoleID:          role.ID("role_admin"),
+			TargetUserID:    identity.UserID("missing_user"),
+			RoleID:          identity.RoleID("role_admin"),
 		},
 	)
 
@@ -123,7 +123,7 @@ func TestRemoveRoleRoleNotFound(t *testing.T) {
 	service, users := newRemoveRoleService(t)
 
 	actor := createRemoveTestUser(t, users, "actor", "clerk_admin")
-	actor.AssignRole(role.ID("role_admin"))
+	actor.AssignRole(identity.RoleID("role_admin"))
 	mustSaveRemoveTestUser(t, users, actor)
 
 	target := createRemoveTestUser(t, users, "target", "clerk_target")
@@ -134,7 +134,7 @@ func TestRemoveRoleRoleNotFound(t *testing.T) {
 		userrole.RemoveCommand{
 			ActorExternalID: "clerk_admin",
 			TargetUserID:    target.ID,
-			RoleID:          role.ID("role_missing"),
+			RoleID:          identity.RoleID("role_missing"),
 		},
 	)
 
@@ -147,7 +147,7 @@ func TestRemoveMembersRoleIsProtected(t *testing.T) {
 	service, users := newRemoveRoleService(t)
 
 	actor := createRemoveTestUser(t, users, "actor", "clerk_admin")
-	actor.AssignRole(role.ID("role_admin"))
+	actor.AssignRole(identity.RoleID("role_admin"))
 	mustSaveRemoveTestUser(t, users, actor)
 
 	target := createRemoveTestUser(t, users, "target", "clerk_target")
@@ -158,7 +158,7 @@ func TestRemoveMembersRoleIsProtected(t *testing.T) {
 		userrole.RemoveCommand{
 			ActorExternalID: "clerk_admin",
 			TargetUserID:    target.ID,
-			RoleID:          role.ID("role_members"),
+			RoleID:          identity.RoleID("role_members"),
 		},
 	)
 
@@ -171,7 +171,7 @@ func TestRemoveMembersRoleIsProtected(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !hasRemoveTestRole(stored, role.ID("role_members")) {
+	if !hasRemoveTestRole(stored, identity.RoleID("role_members")) {
 		t.Fatal("protected Members role must remain assigned")
 	}
 }
@@ -180,17 +180,17 @@ func TestRemoveRoleIsIdempotent(t *testing.T) {
 	service, users := newRemoveRoleService(t)
 
 	actor := createRemoveTestUser(t, users, "actor", "clerk_admin")
-	actor.AssignRole(role.ID("role_admin"))
+	actor.AssignRole(identity.RoleID("role_admin"))
 	mustSaveRemoveTestUser(t, users, actor)
 
 	target := createRemoveTestUser(t, users, "target", "clerk_target")
-	target.AssignRole(role.ID("role_admin"))
+	target.AssignRole(identity.RoleID("role_admin"))
 	mustSaveRemoveTestUser(t, users, target)
 
 	command := userrole.RemoveCommand{
 		ActorExternalID: "clerk_admin",
 		TargetUserID:    target.ID,
-		RoleID:          role.ID("role_admin"),
+		RoleID:          identity.RoleID("role_admin"),
 	}
 
 	first, err := service.Remove(context.Background(), command)
@@ -230,10 +230,10 @@ func createRemoveTestUser(
 	t.Helper()
 
 	u, err := user.New(
-		user.ID(id),
+		identity.UserID(id),
 		externalID,
 		id,
-		role.ID("role_members"),
+		identity.RoleID("role_members"),
 	)
 
 	if err != nil {
@@ -257,7 +257,7 @@ func mustSaveRemoveTestUser(
 	}
 }
 
-func hasRemoveTestRole(u *user.User, roleID role.ID) bool {
+func hasRemoveTestRole(u *user.User, roleID identity.RoleID) bool {
 	for _, current := range u.RoleIDs {
 		if current == roleID {
 			return true

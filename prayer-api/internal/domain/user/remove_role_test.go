@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"prayer-api/internal/domain/user"
+	"prayer-api/internal/domain/identity"
 )
 
 func TestRemoveRoleRemovesAssignedRole(t *testing.T) {

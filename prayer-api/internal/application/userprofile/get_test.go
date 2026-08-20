@@ -7,8 +7,8 @@ import (
 
 	appauth "prayer-api/internal/application/auth"
 	"prayer-api/internal/application/userprofile"
-	"prayer-api/internal/domain/user"
 	"prayer-api/internal/repository/memory"
+	"prayer-api/internal/domain/identity"
 )
 
 type testEnvironment struct {
@@ -250,7 +250,7 @@ func TestGetUnknownActorReturnsNotFound(t *testing.T) {
 	_, err := env.profiles.Get(
 		context.Background(),
 		"clerk_unknown",
-		user.ID("user_999"),
+		identity.UserID("user_999"),
 	)
 
 	if !errors.Is(err, userprofile.ErrUserNotFound) {

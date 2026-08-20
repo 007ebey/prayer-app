@@ -7,6 +7,7 @@ import (
 	"prayer-api/internal/domain/prayergroup"
 	"prayer-api/internal/domain/role"
 	"prayer-api/internal/domain/user"
+	"prayer-api/internal/domain/identity"
 )
 
 var (
@@ -15,27 +16,27 @@ var (
 )
 
 type UserRepository interface {
-	FindByID(ctx context.Context, id user.ID) (*user.User, error)
+	FindByID(ctx context.Context, id identity.UserID) (*user.User, error)
 	FindByExternalID(ctx context.Context, externalID string) (*user.User, error)
 }
 
 type RoleRepository interface {
-	FindByID(ctx context.Context, id role.ID) (*role.Role, error)
+	FindByID(ctx context.Context, id identity.RoleID) (*role.Role, error)
 }
 
 type PrayerGroupRepository interface {
-	FindByID(ctx context.Context, id prayergroup.ID) (*prayergroup.PrayerGroup, error)
-	FindAccessByUserID(ctx context.Context, userID user.ID) ([]prayergroup.Access, error)
+	FindByID(ctx context.Context, id identity.PrayerGroupID) (*prayergroup.PrayerGroup, error)
+	FindAccessByUserID(ctx context.Context, userID identity.UserID) ([]prayergroup.Access, error)
 }
 
 type RoleView struct {
-	ID          role.ID
+	ID          identity.RoleID
 	Name        string
 	Permissions []role.Permission
 }
 
 type PrayerGroupView struct {
-	ID           prayergroup.ID
+	ID           identity.PrayerGroupID
 	Name         string
 	AccessStatus prayergroup.AccessStatus
 }
@@ -60,7 +61,7 @@ func NewService(users UserRepository, roles RoleRepository, groups PrayerGroupRe
 	}
 }
 
-func (s *Service) Get(ctx context.Context, actorExternalID string, requestedUserID user.ID) (*Result, error) {
+func (s *Service) Get(ctx context.Context, actorExternalID string, requestedUserID identity.UserID) (*Result, error) {
 	actor, err := s.users.FindByExternalID(ctx, actorExternalID)
 	if err != nil {
 		return nil, err
