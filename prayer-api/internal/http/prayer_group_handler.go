@@ -57,6 +57,13 @@ type AssignPrayerGroupService interface {
 	) error
 }
 
+type RemovePrayerGroupService interface {
+	Assign(
+		ctx context.Context,
+		cmd appprayergroup.RemoveCommand,
+	)
+}
+
 type PrayerGroupHandler struct {
 	create CreatePrayerGroupService
 	list   ListPrayerGroupService
@@ -64,6 +71,7 @@ type PrayerGroupHandler struct {
 	update UpdatePrayerGroupService
 	delete DeletePrayerGroupService
 	assign AssignPrayerGroupService
+	remove RemovePrayerGroupService
 }
 
 func NewPrayerGroupHandler(
@@ -73,6 +81,7 @@ func NewPrayerGroupHandler(
 	update UpdatePrayerGroupService,
 	delete DeletePrayerGroupService,
 	assign AssignPrayerGroupService,
+	remove RemovePrayerGroupService,
 ) *PrayerGroupHandler {
 	return &PrayerGroupHandler{
 		create: create,
@@ -81,6 +90,7 @@ func NewPrayerGroupHandler(
 		update: update,
 		delete: delete,
 		assign: assign,
+		remove: remove,
 	}
 }
 
@@ -661,6 +671,69 @@ func (h *PrayerGroupHandler) AssignPrayerGroup(
 				},
 			)
 		}
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *PrayerGroupHandler) RemovePrayerGroup(
+	w http.ResponseWriter,
+	r *http.Request
+) {
+	userID := r.PathValue("userID")
+	groupID := r.PathValue("groupID")
+
+	if userID == "" || groupID == "" {
+		writeJSON(
+			w,
+			http.StatusBadRequest,
+			map[string]any{
+               "error": "userID and groupID are required",
+			},
+		)
+	}
+
+	if err := h.remove.Remove(
+        r.Context(),
+        appprayergroup.RemoveCommand{
+            UserID:  domainid.UserID(userID),
+            GroupID: domainid.PrayerGroupID(groupID),
+        },
+    ); err != nil {
+		switch {
+		case errors.Is(err, domainuser.ErrUserNotFound):
+            writeJSON(
+                w,
+                http.StatusNotFound,
+                map[string]any{
+                    "error": "User not found.",
+                },
+            )
+		case errors.Is(err, domainprayergroup.ErrPrayerGroupNotFound):
+            writeJSON(
+                w,
+                http.StatusNotFound,
+                map[string]any{
+                    "error": "Prayer group not found.",
+                },
+            )
+	    case errors.Is(err, domainprayergroup.ErrPrayerGroupNotAssigned):
+            writeJSON(
+                w,
+                http.StatusConflict,
+                map[string]any{
+                    "error": "User is not assigned to the prayer group.",
+                },
+            )
+        default:
+            writeJSON(
+                w,
+                http.StatusInternalServerError,
+                map[string]any{
+                    "error": "Internal server error.",
+                },
+            )
+        }
 	}
 
 	w.WriteHeader(http.StatusNoContent)

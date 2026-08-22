@@ -89,6 +89,11 @@ func main() {
 	   roles,
 	)
 
+	prayerGroupRemoveService := appprayergroup.NewRemovePrayerGroupService(
+		users,
+		groups,
+	)
+
     prayerGroupHandler := httpapi.NewPrayerGroupHandler(
 	    prayerGroupCreateService,
 	    prayerGroupListService,
@@ -96,6 +101,7 @@ func main() {
 	    prayerGroupUpdateService,
 		prayerGroupDeleteService,
 		prayerGroupAssignService,
+		prayerGroupRemoveService,
     )
 
 	userHandler := httpapi.NewUserHandler(
