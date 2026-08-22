@@ -36,6 +36,13 @@ func (r *userRepositoryStub) Save(
 	return nil
 }
 
+func (r *userRepositoryStub) Update(
+	ctx context.Context,
+	user *domainuser.User,
+) error {
+	return nil
+}
+
 type prayerGroupRepositoryStub struct {
 	groups []domainprayergroup.PrayerGroup
 	err    error
@@ -54,7 +61,7 @@ func (r *prayerGroupRepositoryStub) FindVisitorGroup(context.Context) (*domainpr
 	return nil, nil
 }
 
-func (r *prayerGroupRepositoryStub) FindByID(context.Context, domainprayergroup.ID) (*domainprayergroup.PrayerGroup, error) {
+func (r *prayerGroupRepositoryStub) FindByID(context.Context, domainid.PrayerGroupID) (*domainprayergroup.PrayerGroup, error) {
 	return nil, nil
 }
 
@@ -71,7 +78,7 @@ func (r *prayerGroupRepositoryStub) Save(
 
 func (r *prayerGroupRepositoryStub) Delete(
 	ctx context.Context,
-	id domainprayergroup.ID,
+	id domainid.PrayerGroupID,
 ) error {
 	return nil
 }
@@ -79,7 +86,7 @@ func (r *prayerGroupRepositoryStub) Delete(
 func (r *prayerGroupRepositoryStub) FindAccess(
 	context.Context,
 	domainid.UserID,
-	domainprayergroup.ID,
+	domainid.PrayerGroupID,
 ) (*domainprayergroup.Access, error) {
 	return nil, nil
 }
@@ -108,12 +115,12 @@ func TestListReturnsPrayerGroups(t *testing.T) {
 	groupRepo := &prayerGroupRepositoryStub{
 		groups: []domainprayergroup.PrayerGroup{
 			{
-				ID:          domainprayergroup.ID("group-1"),
+				ID:          domainid.PrayerGroupID("group-1"),
 				Name:        "Youth",
 				Description: "Youth Prayer",
 			},
 			{
-				ID:          domainprayergroup.ID("group-2"),
+				ID:          domainid.PrayerGroupID("group-2"),
 				Name:        "Family",
 				Description: "Family Prayer",
 			},

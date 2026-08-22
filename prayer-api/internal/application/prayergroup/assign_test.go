@@ -75,6 +75,20 @@ func (r *assignPrayerGroupRepositoryStub) Delete(
 	return nil
 }
 
+func (r *assignPrayerGroupRepositoryStub) List(
+	ctx context.Context,
+	actorID domainidentity.UserID,
+	) ([]domainprayergroup.PrayerGroup, error) {
+    return nil, nil
+}
+
+func (r *assignPrayerGroupRepositoryStub) Save(
+	ctx context.Context,
+	group *domainprayergroup.PrayerGroup,
+) error {
+	return nil
+}
+
 type assignRoleRepositoryStub struct {
 	role *domainrole.Role
 	err  error

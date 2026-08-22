@@ -53,8 +53,7 @@ type DeletePrayerGroupService interface {
 type AssignPrayerGroupService interface {
 	Assign(
 		ctx context.Context,
-		userID domainid.UserID,	
-		groupID domainid.PrayerGroupID,
+		cmd appprayergroup.AssignCommand,
 	) error
 }
 
@@ -621,8 +620,10 @@ func (h *PrayerGroupHandler) AssignPrayerGroup(
  
 	if err := h.assign.Assign(
 		r.Context(),
-		domainid.UserID(userID),
-		domainid.PrayerGroupID(groupID),
+		appprayergroup.AssignCommand{
+			UserID: domainid.UserID(userID),
+			GroupID: domainid.PrayerGroupID(groupID),
+		},
 	); err != nil {
 		switch {
 		case errors.Is(err, domainuser.ErrUserNotFound):

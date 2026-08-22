@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 	domainprayergroup "prayer-api/internal/domain/prayergroup"
-	domainuser "prayer-api/internal/domain/user"
 	domainid "prayer-api/internal/domain/identity"
 )
 

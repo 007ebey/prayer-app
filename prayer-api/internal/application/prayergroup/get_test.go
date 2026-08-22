@@ -36,6 +36,13 @@ func (r *getUserRepositoryStub) Save(
 	return nil
 }
 
+func (r *getUserRepositoryStub) Update(
+    ctx context.Context,
+	user *domainuser.User,
+) error {
+	return nil
+}
+
 type getPrayerGroupRepositoryStub struct {
 	group *domainprayergroup.PrayerGroup
 	err   error

@@ -29,6 +29,8 @@ func main() {
 	groups := memory.NewPrayerGroupRepository()
 	ids := memory.NewIDGenerator()
 
+	// claims, ok := clerk.SessionClaimsFromContext(r.Context())
+
 	loginService := appauth.NewService(
 		users,
 		roles,
