@@ -67,6 +67,17 @@ type PrayerGroupRepository interface {
 		ctx context.Context,
 		id domainid.PrayerGroupID,
 	) error
+
+	FindAccess(
+		ctx context.Context, 
+		userID domainid.UserID, 
+		groupID domainid.PrayerGroupID,
+	) (*domainprayergroup.Access, error)
+
+	SaveAccess(
+		ctx context.Context, 
+		access domainprayergroup.Access,
+	) error
 }
 
 type IDGenerator interface {

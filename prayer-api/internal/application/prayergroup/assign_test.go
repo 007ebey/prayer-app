@@ -89,6 +89,21 @@ func (r *assignPrayerGroupRepositoryStub) Save(
 	return nil
 }
 
+func (r *assignPrayerGroupRepositoryStub) FindAccess(
+	ctx context.Context, 
+	userID domainidentity.UserID, 
+	groupID domainidentity.PrayerGroupID,
+) (*domainprayergroup.Access, error) {
+    return nil, nil
+}
+
+func (r *assignPrayerGroupRepositoryStub) SaveAccess(
+	ctx context.Context, 
+	access domainprayergroup.Access,
+) error {
+    return nil
+}
+
 type assignRoleRepositoryStub struct {
 	role *domainrole.Role
 	err  error

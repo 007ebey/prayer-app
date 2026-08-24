@@ -64,6 +64,13 @@ type RemovePrayerGroupService interface {
 	) error
 }
 
+type BlockPrayerGroupService interface {
+	Block(
+	    ctx context.Context,
+	    cmd appprayergroup.BlockCommand,
+    ) error
+}
+
 type PrayerGroupHandler struct {
 	create CreatePrayerGroupService
 	list   ListPrayerGroupService
@@ -72,6 +79,7 @@ type PrayerGroupHandler struct {
 	delete DeletePrayerGroupService
 	assign AssignPrayerGroupService
 	remove RemovePrayerGroupService
+	block  BlockPrayerGroupService
 }
 
 func NewPrayerGroupHandler(
@@ -82,6 +90,7 @@ func NewPrayerGroupHandler(
 	delete DeletePrayerGroupService,
 	assign AssignPrayerGroupService,
 	remove RemovePrayerGroupService,
+	block  BlockPrayerGroupService,
 ) *PrayerGroupHandler {
 	return &PrayerGroupHandler{
 		create: create,
@@ -91,6 +100,7 @@ func NewPrayerGroupHandler(
 		delete: delete,
 		assign: assign,
 		remove: remove,
+		block:  block,
 	}
 }
 
@@ -734,6 +744,120 @@ func (h *PrayerGroupHandler) RemovePrayerGroup(
                 },
             )
         }
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *PrayerGroupHandler) BlockPrayerGroup(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	claims, ok := clerk.SessionClaimsFromContext(
+		r.Context(),
+	)
+
+	if !ok {
+		writeJSON(
+			w,
+			http.StatusUnauthorized,
+			map[string]any{
+				"error": "unauthorized",
+			},
+		)
+		return
+	}
+
+	userID := r.PathValue("userID")
+	groupID := r.PathValue("groupID")
+
+	if userID == "" || groupID == "" {
+		writeJSON(
+			w,
+			http.StatusBadRequest,
+			map[string]any{
+				"error": "userID and groupID are required",
+			},
+		)
+		return
+	}
+
+	err := h.block.Block(
+		r.Context(),
+		appprayergroup.BlockCommand{
+			ActorExternalID: claims.Subject,
+			UserID:          domainid.UserID(userID),
+			GroupID:         domainid.PrayerGroupID(groupID),
+		},
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, appprayergroup.ErrUnauthorized):
+			writeJSON(
+				w,
+				http.StatusUnauthorized,
+				map[string]any{
+					"error": "unauthorized",
+				},
+			)
+
+		case errors.Is(err, appprayergroup.ErrActorNotFound):
+			writeJSON(
+				w,
+				http.StatusNotFound,
+				map[string]any{
+					"error": "actor not found",
+				},
+			)
+
+		case errors.Is(err, appprayergroup.ErrForbidden):
+			writeJSON(
+				w,
+				http.StatusForbidden,
+				map[string]any{
+					"error": "forbidden",
+				},
+			)
+
+		case errors.Is(err, domainuser.ErrUserNotFound):
+			writeJSON(
+				w,
+				http.StatusNotFound,
+				map[string]any{
+					"error": "user not found",
+				},
+			)
+
+		case errors.Is(err, domainprayergroup.ErrPrayerGroupNotFound):
+			writeJSON(
+				w,
+				http.StatusNotFound,
+				map[string]any{
+					"error": "prayer group not found",
+				},
+			)
+
+		case errors.Is(err, domainprayergroup.ErrPrayerGroupNotAssigned):
+			writeJSON(
+				w,
+				http.StatusConflict,
+				map[string]any{
+					"error": "user is not assigned to the prayer group",
+				},
+			)
+
+		default:
+			writeJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]any{
+					"error": "internal server error",
+				},
+			)
+		}
+
+		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)

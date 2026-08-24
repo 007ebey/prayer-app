@@ -84,5 +84,10 @@ func NewRouter(auth *AuthHandler, users *UserHandler, userRoles *UserRoleHandler
         ),
     )
 
+	mux.Handle(
+        "POST /api/users/{userID}/prayer-groups/{groupID}/block",
+        http.HandlerFunc(prayerGroupHandler.BlockPrayerGroup),
+    )
+
 	return mux
 }

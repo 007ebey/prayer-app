@@ -94,6 +94,12 @@ func main() {
 		groups,
 	)
 
+	prayerGroupBlockService := appprayergroup.NewBlockPrayerGroupService(
+		users,
+	    groups,
+	    roles,
+	)
+
     prayerGroupHandler := httpapi.NewPrayerGroupHandler(
 	    prayerGroupCreateService,
 	    prayerGroupListService,
@@ -102,6 +108,7 @@ func main() {
 		prayerGroupDeleteService,
 		prayerGroupAssignService,
 		prayerGroupRemoveService,
+		prayerGroupBlockService,
     )
 
 	userHandler := httpapi.NewUserHandler(

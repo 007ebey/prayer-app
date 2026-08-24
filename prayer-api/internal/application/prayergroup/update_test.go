@@ -53,6 +53,21 @@ func (r *updatePrayerGroupRepositoryStub) Delete(
     return nil
 }
 
+func (r *updatePrayerGroupRepositoryStub) FindAccess(
+	ctx context.Context, 
+	userID domainid.UserID, 
+	groupID domainid.PrayerGroupID,
+) (*domainprayergroup.Access, error) {
+    return nil, nil
+}
+
+func (r *updatePrayerGroupRepositoryStub) SaveAccess(
+	ctx context.Context, 
+	access domainprayergroup.Access,
+) error {
+    return nil
+}
+
 func TestUpdateReturnsFindError(t *testing.T) {
 	expected := errors.New("database error")
 
