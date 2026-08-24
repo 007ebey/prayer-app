@@ -58,10 +58,10 @@ type AssignPrayerGroupService interface {
 }
 
 type RemovePrayerGroupService interface {
-	Assign(
+	Remove(
 		ctx context.Context,
 		cmd appprayergroup.RemoveCommand,
-	)
+	) error
 }
 
 type PrayerGroupHandler struct {
@@ -678,7 +678,7 @@ func (h *PrayerGroupHandler) AssignPrayerGroup(
 
 func (h *PrayerGroupHandler) RemovePrayerGroup(
 	w http.ResponseWriter,
-	r *http.Request
+	r *http.Request,
 ) {
 	userID := r.PathValue("userID")
 	groupID := r.PathValue("groupID")

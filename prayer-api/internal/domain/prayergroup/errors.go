@@ -12,4 +12,5 @@ var (
 	ErrNotFound  		    = errors.New("prayer group not found")
 	ErrPrayerGroupNotFound  = errors.New("prayer group not found")
 	ErrPrayerGroupAlreadyAssigned = errors.New("prayer group already assigned")
+	ErrPrayerGroupNotAssigned = errors.New("prayer group not assigned")
 )

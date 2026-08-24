@@ -2,11 +2,10 @@ package prayergroup
 
 import (
 	"context"
-	"errors"
 
-	domainuser "prayer-api/internal/domain/user"
 	domainid "prayer-api/internal/domain/identity"
-	domainrole "prayer-api/internal/domain/role"
+    domainuser "prayer-api/internal/domain/user"
+    domainprayergroup "prayer-api/internal/domain/prayergroup"
 )
 
 type RemoveCommand struct {
@@ -33,14 +32,20 @@ func (s *RemovePrayerGroupService) Remove(
     ctx context.Context,
     cmd RemoveCommand,
 ) error {
-    user, err := s.users.Get(ctx, cmd.UserID)
+    user, err := s.users.FindByID(ctx, cmd.UserID)
     if err != nil {
         return err
     }
 
+    if user == nil {
+        return domainuser.ErrUserNotFound
+    }
+
     // Ensure the prayer group exists.
-    if _, err := s.prayerGroups.Get(ctx, cmd.GroupID); err != nil {
-        return err
+    if group, err := s.prayerGroups.FindByID(ctx, cmd.GroupID); err != nil {
+	    return err
+    } else if group == nil {
+	    return domainprayergroup.ErrPrayerGroupNotFound
     }
 
     if err := user.RemovePrayerGroup(cmd.GroupID); err != nil {

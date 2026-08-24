@@ -7,9 +7,122 @@ import (
 
 	domainid "prayer-api/internal/domain/identity"
 	domainprayergroup "prayer-api/internal/domain/prayergroup"
-	domainrole "prayer-api/internal/domain/role"
 	domainuser "prayer-api/internal/domain/user"
 )
+
+type removeUserRepositoryStub struct {
+	user      *domainuser.User
+	findErr   error
+	updateErr error
+	updated   bool
+}
+
+func (r *removeUserRepositoryStub) FindByID(
+	_ context.Context,
+	_ domainid.UserID,
+) (*domainuser.User, error) {
+	if r.findErr != nil {
+		return nil, r.findErr
+	}
+
+	return r.user, nil
+}
+
+func (r *removeUserRepositoryStub) FindByExternalID(
+	_ context.Context,
+	_ string,
+) (*domainuser.User, error) {
+	return nil, nil
+}
+
+func (r *removeUserRepositoryStub) Save(
+	_ context.Context,
+	_ *domainuser.User,
+) error {
+	return nil
+}
+
+func (r *removeUserRepositoryStub) Update(
+	_ context.Context,
+	user *domainuser.User,
+) error {
+	r.updated = true
+	r.user = user
+
+	return r.updateErr
+}
+
+type removePrayerGroupRepositoryStub struct {
+	group   *domainprayergroup.PrayerGroup
+	findErr error
+}
+
+func (r *removePrayerGroupRepositoryStub) FindVisitorGroup(
+	_ context.Context,
+) (*domainprayergroup.PrayerGroup, error) {
+	return nil, nil
+}
+
+func (r *removePrayerGroupRepositoryStub) FindByID(
+	_ context.Context,
+	_ domainid.PrayerGroupID,
+) (*domainprayergroup.PrayerGroup, error) {
+	if r.findErr != nil {
+		return nil, r.findErr
+	}
+
+	return r.group, nil
+}
+
+func (r *removePrayerGroupRepositoryStub) List(
+	_ context.Context,
+	_ domainid.UserID,
+) ([]domainprayergroup.PrayerGroup, error) {
+	return nil, nil
+}
+
+func (r *removePrayerGroupRepositoryStub) FindAccess(
+	_ context.Context,
+	_ domainid.UserID,
+	_ domainid.PrayerGroupID,
+) (*domainprayergroup.Access, error) {
+	return nil, nil
+}
+
+func (r *removePrayerGroupRepositoryStub) FindAccessByUserID(
+	_ context.Context,
+	_ domainid.UserID,
+) ([]domainprayergroup.Access, error) {
+	return nil, nil
+}
+
+func (r *removePrayerGroupRepositoryStub) SaveAccess(
+	_ context.Context,
+	_ domainprayergroup.Access,
+) error {
+	return nil
+}
+
+func (r *removePrayerGroupRepositoryStub) Save(
+	_ context.Context,
+	_ *domainprayergroup.PrayerGroup,
+) error {
+	return nil
+}
+
+func (r *removePrayerGroupRepositoryStub) Update(
+	_ context.Context,
+	_ *domainprayergroup.PrayerGroup,
+) error {
+	return nil
+}
+
+func (r *removePrayerGroupRepositoryStub) Delete(
+	_ context.Context,
+	_ domainid.PrayerGroupID,
+) error {
+	return nil
+}
 
 func TestRemovePrayerGroupService_Remove(t *testing.T) {
 	roleID := domainid.RoleID("role-1")
@@ -75,7 +188,7 @@ func TestRemovePrayerGroupService_Remove(t *testing.T) {
 func TestRemovePrayerGroupService_UserNotFound(t *testing.T) {
 	service := NewRemovePrayerGroupService(
 		&removeUserRepositoryStub{
-			getErr: domainuser.ErrUserNotFound,
+			findErr: domainuser.ErrUserNotFound,
 		},
 		&removePrayerGroupRepositoryStub{},
 	)
@@ -105,7 +218,7 @@ func TestRemovePrayerGroupService_PrayerGroupNotFound(t *testing.T) {
 			user: user,
 		},
 		&removePrayerGroupRepositoryStub{
-			getErr: domainprayergroup.ErrPrayerGroupNotFound,
+			findErr: domainprayergroup.ErrPrayerGroupNotFound,
 		},
 	)
 
