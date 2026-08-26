@@ -701,6 +701,7 @@ func (h *PrayerGroupHandler) RemovePrayerGroup(
                "error": "userID and groupID are required",
 			},
 		)
+		return
 	}
 
 	if err := h.remove.Remove(

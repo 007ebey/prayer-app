@@ -682,3 +682,253 @@ func TestPrayerGroupHandler_Block_GenericError(t *testing.T) {
 	)
 }
 
+func TestPrayerGroupHandler_Remove_MissingPathValues(t *testing.T) {
+	mock := &mockRemoveService{
+		removeFn: func(
+			context.Context,
+			appprayergroup.RemoveCommand,
+		) error {
+			t.Fatal("service should not be called")
+			return nil
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		remove: mock,
+	}
+
+	req := httptest.NewRequest(
+		http.MethodDelete,
+		"/groups//users/",
+		nil,
+	)
+
+	rec := httptest.NewRecorder()
+
+	handler.RemovePrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusBadRequest,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"userID and groupID are required",
+	)
+}
+
+func TestPrayerGroupHandler_Remove_Success(t *testing.T) {
+	mock := &mockRemoveService{
+		removeFn: func(
+			ctx context.Context,
+			cmd appprayergroup.RemoveCommand,
+		) error {
+			assert.Equal(
+				t,
+				"user-1",
+				string(cmd.UserID),
+			)
+
+			assert.Equal(
+				t,
+				"group-1",
+				string(cmd.GroupID),
+			)
+
+			return nil
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		remove: mock,
+	}
+
+	req := httptest.NewRequest(
+		http.MethodDelete,
+		"/groups/group-1/users/user-1",
+		nil,
+	)
+
+	req.SetPathValue(
+		"groupID",
+		"group-1",
+	)
+
+	req.SetPathValue(
+		"userID",
+		"user-1",
+	)
+
+	rec := httptest.NewRecorder()
+
+	handler.RemovePrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNoContent,
+		rec.Code,
+	)
+}
+
+func TestPrayerGroupHandler_Remove_UserNotFound(t *testing.T) {
+	mock := &mockRemoveService{
+		removeFn: func(
+			context.Context,
+			appprayergroup.RemoveCommand,
+		) error {
+			return domainuser.ErrUserNotFound
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		remove: mock,
+	}
+
+	req := httptest.NewRequest(
+		http.MethodDelete,
+		"/groups/group-1/users/user-1",
+		nil,
+	)
+
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.RemovePrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"User not found.",
+	)
+}
+
+func TestPrayerGroupHandler_Remove_PrayerGroupNotFound(t *testing.T) {
+	mock := &mockRemoveService{
+		removeFn: func(
+			context.Context,
+			appprayergroup.RemoveCommand,
+		) error {
+			return domain.ErrPrayerGroupNotFound
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		remove: mock,
+	}
+
+	req := httptest.NewRequest(
+		http.MethodDelete,
+		"/groups/group-1/users/user-1",
+		nil,
+	)
+
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.RemovePrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"Prayer group not found.",
+	)
+}
+
+func TestPrayerGroupHandler_Remove_UserNotAssigned(t *testing.T) {
+	mock := &mockRemoveService{
+		removeFn: func(
+			context.Context,
+			appprayergroup.RemoveCommand,
+		) error {
+			return domain.ErrPrayerGroupNotAssigned
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		remove: mock,
+	}
+
+	req := httptest.NewRequest(
+		http.MethodDelete,
+		"/groups/group-1/users/user-1",
+		nil,
+	)
+
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.RemovePrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusConflict,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"User is not assigned to the prayer group.",
+	)
+}
+
+func TestPrayerGroupHandler_Remove_GenericError(t *testing.T) {
+	mock := &mockRemoveService{
+		removeFn: func(
+			context.Context,
+			appprayergroup.RemoveCommand,
+		) error {
+			return errors.New("database error")
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		remove: mock,
+	}
+
+	req := httptest.NewRequest(
+		http.MethodDelete,
+		"/groups/group-1/users/user-1",
+		nil,
+	)
+
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.RemovePrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusInternalServerError,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"Internal server error.",
+	)
+}
