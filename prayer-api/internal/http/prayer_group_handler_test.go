@@ -17,6 +17,7 @@ import (
 	appprayergroup "prayer-api/internal/application/prayergroup"
 	domain "prayer-api/internal/domain/prayergroup"
 	domainuser "prayer-api/internal/domain/user"
+	domainid "prayer-api/internal/domain/identity"
 )
 
 type mockCreateService struct {
@@ -73,6 +74,22 @@ func (m *mockAssignService) Assign(
 	cmd appprayergroup.AssignCommand,
 ) error {
 	return m.assignFn(ctx, cmd)
+}
+
+type mockDeleteService struct {
+	deleteFn func(
+		context.Context,
+		domainid.UserID,
+		domainid.PrayerGroupID,
+	) error
+}
+
+func (m *mockDeleteService) Delete(
+	ctx context.Context,
+	actorID domainid.UserID,
+	groupID domainid.PrayerGroupID,
+) error {
+	return m.deleteFn(ctx, actorID, groupID)
 }
 
 func requestWithClaims(body string) *http.Request {
@@ -1188,5 +1205,262 @@ func TestPrayerGroupHandler_Assign_GenericError(t *testing.T) {
 		t,
 		rec.Body.String(),
 		"Internal server error.",
+	)
+}
+
+func TestPrayerGroupHandler_Delete_Unauthorized(t *testing.T) {
+	handler := &PrayerGroupHandler{}
+
+	req := httptest.NewRequest(
+		http.MethodDelete,
+		"/groups/group-1",
+		nil,
+	)
+
+	req.SetPathValue(
+		"groupID",
+		"group-1",
+	)
+
+	rec := httptest.NewRecorder()
+
+	handler.Delete(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"unauthorized",
+	)
+}
+
+func TestPrayerGroupHandler_Delete_Success(t *testing.T) {
+	mock := &mockDeleteService{
+		deleteFn: func(
+			ctx context.Context,
+			actorID domainid.UserID,
+			groupID domainid.PrayerGroupID,
+		) error {
+			assert.Equal(
+				t,
+				"user-123",
+				string(actorID),
+			)
+
+			assert.Equal(
+				t,
+				"group-1",
+				string(groupID),
+			)
+
+			return nil
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		delete: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodDelete
+
+	req.SetPathValue(
+		"groupID",
+		"group-1",
+	)
+
+	rec := httptest.NewRecorder()
+
+	handler.Delete(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNoContent,
+		rec.Code,
+	)
+}
+
+func TestPrayerGroupHandler_Delete_ServiceUnauthorized(t *testing.T) {
+	mock := &mockDeleteService{
+		deleteFn: func(
+			context.Context,
+			domainid.UserID,
+			domainid.PrayerGroupID,
+		) error {
+			return appprayergroup.ErrUnauthorized
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		delete: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodDelete
+	req.SetPathValue("groupID", "group-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.Delete(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"unauthorized",
+	)
+}
+
+func TestPrayerGroupHandler_Delete_ActorNotFound(t *testing.T) {
+	mock := &mockDeleteService{
+		deleteFn: func(
+			context.Context,
+			domainid.UserID,
+			domainid.PrayerGroupID,
+		) error {
+			return appprayergroup.ErrActorNotFound
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		delete: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodDelete
+	req.SetPathValue("groupID", "group-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.Delete(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"actor not found",
+	)
+}
+
+func TestPrayerGroupHandler_Delete_PrayerGroupNotFound(t *testing.T) {
+	mock := &mockDeleteService{
+		deleteFn: func(
+			context.Context,
+			domainid.UserID,
+			domainid.PrayerGroupID,
+		) error {
+			return appprayergroup.ErrPrayerGroupNotFound
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		delete: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodDelete
+	req.SetPathValue("groupID", "group-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.Delete(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"prayer group not found",
+	)
+}
+
+func TestPrayerGroupHandler_Delete_Forbidden(t *testing.T) {
+	mock := &mockDeleteService{
+		deleteFn: func(
+			context.Context,
+			domainid.UserID,
+			domainid.PrayerGroupID,
+		) error {
+			return appprayergroup.ErrForbidden
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		delete: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodDelete
+	req.SetPathValue("groupID", "group-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.Delete(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusForbidden,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"forbidden",
+	)
+}
+
+func TestPrayerGroupHandler_Delete_GenericError(t *testing.T) {
+	mock := &mockDeleteService{
+		deleteFn: func(
+			context.Context,
+			domainid.UserID,
+			domainid.PrayerGroupID,
+		) error {
+			return errors.New("database error")
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		delete: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodDelete
+	req.SetPathValue("groupID", "group-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.Delete(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusInternalServerError,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"database error",
 	)
 }
