@@ -47,6 +47,20 @@ func (m *mockBlockService) Block(
 	return m.blockFn(ctx, cmd)
 }
 
+type mockRemoveService struct {
+	removeFn func(
+		context.Context,
+		appprayergroup.RemoveCommand,
+	) error
+}
+
+func (m *mockRemoveService) Remove(
+	ctx context.Context,
+	cmd appprayergroup.RemoveCommand,
+) error {
+	return m.removeFn(ctx, cmd)
+}
+
 func requestWithClaims(body string) *http.Request {
 	req := httptest.NewRequest(
 		http.MethodPost,
@@ -525,3 +539,146 @@ func TestPrayerGroupHandler_Block_UserNotFound(t *testing.T) {
 		rec.Code,
 	)
 }
+
+func TestPrayerGroupHandler_Block_MissingPathValues(t *testing.T) {
+	mock := &mockBlockService{
+		blockFn: func(
+			context.Context,
+			appprayergroup.BlockCommand,
+		) error {
+			t.Fatal("service should not be called")
+
+			return nil
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		block: mock,
+	}
+
+	req := requestWithClaims("")
+	req.SetPathValue("groupID", "")
+	req.SetPathValue("userID", "")
+
+	rec := httptest.NewRecorder()
+
+	handler.BlockPrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusBadRequest,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"userID and groupID are required",
+	)
+}
+
+func TestPrayerGroupHandler_Block_PrayerGroupNotFound(t *testing.T) {
+	mock := &mockBlockService{
+		blockFn: func(
+			context.Context,
+			appprayergroup.BlockCommand,
+		) error {
+			return domain.ErrPrayerGroupNotFound
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		block: mock,
+	}
+
+	req := requestWithClaims("")
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.BlockPrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"prayer group not found",
+	)
+}
+
+func TestPrayerGroupHandler_Block_UserNotAssigned(t *testing.T) {
+	mock := &mockBlockService{
+		blockFn: func(
+			context.Context,
+			appprayergroup.BlockCommand,
+		) error {
+			return domain.ErrPrayerGroupNotAssigned
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		block: mock,
+	}
+
+	req := requestWithClaims("")
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.BlockPrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusConflict,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"user is not assigned to the prayer group",
+	)
+}
+
+func TestPrayerGroupHandler_Block_GenericError(t *testing.T) {
+	mock := &mockBlockService{
+		blockFn: func(
+			context.Context,
+			appprayergroup.BlockCommand,
+		) error {
+			return errors.New("database exploded")
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		block: mock,
+	}
+
+	req := requestWithClaims("")
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.BlockPrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusInternalServerError,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"internal server error",
+	)
+}
+
