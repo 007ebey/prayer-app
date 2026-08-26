@@ -16,6 +16,7 @@ import (
 
 	appprayergroup "prayer-api/internal/application/prayergroup"
 	domain "prayer-api/internal/domain/prayergroup"
+	domainuser "prayer-api/internal/domain/user"
 )
 
 type mockCreateService struct {
@@ -30,6 +31,20 @@ func (m *mockCreateService) Create(
 	cmd appprayergroup.CreateCommand,
 ) (*appprayergroup.CreateResult, error) {
 	return m.createFn(ctx, cmd)
+}
+
+type mockBlockService struct {
+	blockFn func(
+		context.Context,
+		appprayergroup.BlockCommand,
+	) error
+}
+
+func (m *mockBlockService) Block(
+	ctx context.Context,
+	cmd appprayergroup.BlockCommand,
+) error {
+	return m.blockFn(ctx, cmd)
 }
 
 func requestWithClaims(body string) *http.Request {
@@ -313,5 +328,200 @@ func TestPrayerGroupHandler_Create_GenericError(t *testing.T) {
 		t,
 		rec.Body.String(),
 		"validation failed",
+	)
+}
+
+func TestPrayerGroupHandler_Block_Unauthorized(t *testing.T) {
+	handler := &PrayerGroupHandler{}
+
+	req := httptest.NewRequest(
+		http.MethodPatch,
+		"/groups/group-1/users/user-1/block",
+		nil,
+	)
+
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.BlockPrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		rec.Code,
+	)
+}
+
+func TestPrayerGroupHandler_Block_Success(t *testing.T) {
+	mock := &mockBlockService{
+		blockFn: func(
+			ctx context.Context,
+			cmd appprayergroup.BlockCommand,
+		) error {
+			assert.Equal(
+				t,
+				"user-123",
+				cmd.ActorExternalID,
+			)
+
+			assert.Equal(
+				t,
+				"group-1",
+				string(cmd.GroupID),
+			)
+
+			assert.Equal(
+				t,
+				"user-1",
+				string(cmd.UserID),
+			)
+
+			return nil
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		block: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodPatch
+
+	req.SetPathValue(
+		"groupID",
+		"group-1",
+	)
+
+	req.SetPathValue(
+		"userID",
+		"user-1",
+	)
+
+	rec := httptest.NewRecorder()
+
+	handler.BlockPrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNoContent,
+		rec.Code,
+	)
+}
+
+func TestPrayerGroupHandler_Block_ServiceUnauthorized(t *testing.T) {
+	mock := &mockBlockService{
+		blockFn: func(
+			context.Context,
+			appprayergroup.BlockCommand,
+		) error {
+			return appprayergroup.ErrUnauthorized
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		block: mock,
+	}
+
+	req := requestWithClaims("")
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.BlockPrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		rec.Code,
+	)
+}
+
+func TestPrayerGroupHandler_Block_ActorNotFound(t *testing.T) {
+	mock := &mockBlockService{
+		blockFn: func(
+			context.Context,
+			appprayergroup.BlockCommand,
+		) error {
+			return appprayergroup.ErrActorNotFound
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		block: mock,
+	}
+
+	req := requestWithClaims("")
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.BlockPrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		rec.Code,
+	)
+}
+
+func TestPrayerGroupHandler_Block_Forbidden(t *testing.T) {
+	mock := &mockBlockService{
+		blockFn: func(
+			context.Context,
+			appprayergroup.BlockCommand,
+		) error {
+			return appprayergroup.ErrForbidden
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		block: mock,
+	}
+
+	req := requestWithClaims("")
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.BlockPrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusForbidden,
+		rec.Code,
+	)
+}
+
+func TestPrayerGroupHandler_Block_UserNotFound(t *testing.T) {
+	mock := &mockBlockService{
+		blockFn: func(
+			context.Context,
+			appprayergroup.BlockCommand,
+		) error {
+			return domainuser.ErrUserNotFound
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		block: mock,
+	}
+
+	req := requestWithClaims("")
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.BlockPrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		rec.Code,
 	)
 }
