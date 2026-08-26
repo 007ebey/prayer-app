@@ -61,6 +61,20 @@ func (m *mockRemoveService) Remove(
 	return m.removeFn(ctx, cmd)
 }
 
+type mockAssignService struct {
+	assignFn func(
+		context.Context,
+		appprayergroup.AssignCommand,
+	) error
+}
+
+func (m *mockAssignService) Assign(
+	ctx context.Context,
+	cmd appprayergroup.AssignCommand,
+) error {
+	return m.assignFn(ctx, cmd)
+}
+
 func requestWithClaims(body string) *http.Request {
 	req := httptest.NewRequest(
 		http.MethodPost,
@@ -919,6 +933,250 @@ func TestPrayerGroupHandler_Remove_GenericError(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	handler.RemovePrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusInternalServerError,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"Internal server error.",
+	)
+}
+
+func TestPrayerGroupHandler_Assign_MissingPathValues(t *testing.T) {
+	mock := &mockAssignService{
+		assignFn: func(
+			context.Context,
+			appprayergroup.AssignCommand,
+		) error {
+			t.Fatal("service should not be called")
+			return nil
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		assign: mock,
+	}
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/groups//users/",
+		nil,
+	)
+
+	rec := httptest.NewRecorder()
+
+	handler.AssignPrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusBadRequest,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"userID and groupID are required",
+	)
+}
+
+func TestPrayerGroupHandler_Assign_Success(t *testing.T) {
+	mock := &mockAssignService{
+		assignFn: func(
+			ctx context.Context,
+			cmd appprayergroup.AssignCommand,
+		) error {
+			assert.Equal(
+				t,
+				"user-1",
+				string(cmd.UserID),
+			)
+
+			assert.Equal(
+				t,
+				"group-1",
+				string(cmd.GroupID),
+			)
+
+			return nil
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		assign: mock,
+	}
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/groups/group-1/users/user-1",
+		nil,
+	)
+
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.AssignPrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNoContent,
+		rec.Code,
+	)
+}
+
+func TestPrayerGroupHandler_Assign_UserNotFound(t *testing.T) {
+	mock := &mockAssignService{
+		assignFn: func(
+			context.Context,
+			appprayergroup.AssignCommand,
+		) error {
+			return domainuser.ErrUserNotFound
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		assign: mock,
+	}
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/groups/group-1/users/user-1",
+		nil,
+	)
+
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.AssignPrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"User not found.",
+	)
+}
+
+func TestPrayerGroupHandler_Assign_PrayerGroupNotFound(t *testing.T) {
+	mock := &mockAssignService{
+		assignFn: func(
+			context.Context,
+			appprayergroup.AssignCommand,
+		) error {
+			return domain.ErrPrayerGroupNotFound
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		assign: mock,
+	}
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/groups/group-1/users/user-1",
+		nil,
+	)
+
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.AssignPrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"Prayer group not found.",
+	)
+}
+
+func TestPrayerGroupHandler_Assign_AlreadyAssigned(t *testing.T) {
+	mock := &mockAssignService{
+		assignFn: func(
+			context.Context,
+			appprayergroup.AssignCommand,
+		) error {
+			return domain.ErrPrayerGroupAlreadyAssigned
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		assign: mock,
+	}
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/groups/group-1/users/user-1",
+		nil,
+	)
+
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.AssignPrayerGroup(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusConflict,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"User already belongs to the prayer group.",
+	)
+}
+
+func TestPrayerGroupHandler_Assign_GenericError(t *testing.T) {
+	mock := &mockAssignService{
+		assignFn: func(
+			context.Context,
+			appprayergroup.AssignCommand,
+		) error {
+			return errors.New("database error")
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		assign: mock,
+	}
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/groups/group-1/users/user-1",
+		nil,
+	)
+
+	req.SetPathValue("groupID", "group-1")
+	req.SetPathValue("userID", "user-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.AssignPrayerGroup(rec, req)
 
 	assert.Equal(
 		t,
