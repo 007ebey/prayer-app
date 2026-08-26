@@ -76,6 +76,20 @@ func (m *mockAssignService) Assign(
 	return m.assignFn(ctx, cmd)
 }
 
+type mockUpdateService struct {
+	updateFn func(
+		context.Context,
+		appprayergroup.UpdateRequest,
+	) (*domain.PrayerGroup, error)
+}
+
+func (m *mockUpdateService) Update(
+	ctx context.Context,
+	request appprayergroup.UpdateRequest,
+) (*domain.PrayerGroup, error) {
+	return m.updateFn(ctx, request)
+}
+
 type mockDeleteService struct {
 	deleteFn func(
 		context.Context,
@@ -1462,5 +1476,242 @@ func TestPrayerGroupHandler_Delete_GenericError(t *testing.T) {
 		t,
 		rec.Body.String(),
 		"database error",
+	)
+}
+
+func TestPrayerGroupHandler_Update_Unauthorized(t *testing.T) {
+	handler := &PrayerGroupHandler{}
+
+	req := httptest.NewRequest(
+		http.MethodPut,
+		"/groups/group-1",
+		bytes.NewBufferString(`{
+			"name":"Updated Group",
+			"description":"Updated Description"
+		}`),
+	)
+
+	req.SetPathValue(
+		"groupID",
+		"group-1",
+	)
+
+	rec := httptest.NewRecorder()
+
+	handler.Update(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"unauthorized",
+	)
+}
+
+func TestPrayerGroupHandler_Update_InvalidJSON(t *testing.T) {
+	handler := &PrayerGroupHandler{}
+
+	req := requestWithClaims("{")
+	req.Method = http.MethodPut
+
+	req.SetPathValue(
+		"groupID",
+		"group-1",
+	)
+
+	rec := httptest.NewRecorder()
+
+	handler.Update(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusBadRequest,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"invalid request body",
+	)
+}
+
+func TestPrayerGroupHandler_Update_Success(t *testing.T) {
+	mock := &mockUpdateService{
+		updateFn: func(
+			ctx context.Context,
+			request appprayergroup.UpdateRequest,
+		) (*domain.PrayerGroup, error) {
+			assert.Equal(
+				t,
+				"group-1",
+				string(request.GroupID),
+			)
+
+			assert.Equal(
+				t,
+				"Updated Group",
+				*request.Name,
+			)
+
+			assert.Equal(
+				t,
+				"Updated Description",
+				*request.Description,
+			)
+
+			return &domain.PrayerGroup{
+				ID:          "group-1",
+				Name:        "Updated Group",
+				Description: "Updated Description",
+				Status:      domain.StatusActive,
+			}, nil
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		update: mock,
+	}
+
+	body := `{
+		"name":"Updated Group",
+		"description":"Updated Description"
+	}`
+
+	req := requestWithClaims(body)
+	req.Method = http.MethodPut
+
+	req.SetPathValue(
+		"groupID",
+		"group-1",
+	)
+
+	rec := httptest.NewRecorder()
+
+	handler.Update(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusOK,
+		rec.Code,
+	)
+
+	var response map[string]any
+
+	require.NoError(
+		t,
+		json.Unmarshal(
+			rec.Body.Bytes(),
+			&response,
+		),
+	)
+
+	group := response["prayerGroup"].(map[string]any)
+
+	assert.Equal(
+		t,
+		"group-1",
+		group["id"],
+	)
+
+	assert.Equal(
+		t,
+		"Updated Group",
+		group["name"],
+	)
+
+	assert.Equal(
+		t,
+		"Updated Description",
+		group["description"],
+	)
+}
+
+func TestPrayerGroupHandler_Update_PrayerGroupNotFound(t *testing.T) {
+	mock := &mockUpdateService{
+		updateFn: func(
+			context.Context,
+			appprayergroup.UpdateRequest,
+		) (*domain.PrayerGroup, error) {
+			return nil, appprayergroup.ErrPrayerGroupNotFound
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		update: mock,
+	}
+
+	req := requestWithClaims(`{
+		"name":"Updated Group"
+	}`)
+
+	req.Method = http.MethodPut
+
+	req.SetPathValue(
+		"groupID",
+		"group-1",
+	)
+
+	rec := httptest.NewRecorder()
+
+	handler.Update(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"prayer group not found",
+	)
+}
+
+func TestPrayerGroupHandler_Update_GenericError(t *testing.T) {
+	mock := &mockUpdateService{
+		updateFn: func(
+			context.Context,
+			appprayergroup.UpdateRequest,
+		) (*domain.PrayerGroup, error) {
+			return nil, errors.New("name is required")
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		update: mock,
+	}
+
+	req := requestWithClaims(`{
+		"name":""
+	}`)
+
+	req.Method = http.MethodPut
+
+	req.SetPathValue(
+		"groupID",
+		"group-1",
+	)
+
+	rec := httptest.NewRecorder()
+
+	handler.Update(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusBadRequest,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"name is required",
 	)
 }
