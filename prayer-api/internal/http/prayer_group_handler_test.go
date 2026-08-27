@@ -106,6 +106,20 @@ func (m *mockDeleteService) Delete(
 	return m.deleteFn(ctx, actorID, groupID)
 }
 
+type mockGetService struct {
+	getFn func(
+		context.Context,
+		appprayergroup.GetQuery,
+	) (*appprayergroup.GetResult, error)
+}
+
+func (m *mockGetService) Get(
+	ctx context.Context,
+	query appprayergroup.GetQuery,
+) (*appprayergroup.GetResult, error) {
+	return m.getFn(ctx, query)
+}
+
 func requestWithClaims(body string) *http.Request {
 	req := httptest.NewRequest(
 		http.MethodPost,
@@ -1713,5 +1727,300 @@ func TestPrayerGroupHandler_Update_GenericError(t *testing.T) {
 		t,
 		rec.Body.String(),
 		"name is required",
+	)
+}
+
+func TestPrayerGroupHandler_GetByID_Unauthorized(t *testing.T) {
+	handler := &PrayerGroupHandler{}
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/groups/group-1",
+		nil,
+	)
+
+	req.SetPathValue(
+		"groupID",
+		"group-1",
+	)
+
+	rec := httptest.NewRecorder()
+
+	handler.GetByID(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"unauthorized",
+	)
+}
+
+func TestPrayerGroupHandler_GetByID_Success(t *testing.T) {
+	mock := &mockGetService{
+		getFn: func(
+			ctx context.Context,
+			query appprayergroup.GetQuery,
+		) (*appprayergroup.GetResult, error) {
+
+			assert.Equal(
+				t,
+				"user-123",
+				query.ActorExternalID,
+			)
+
+			assert.Equal(
+				t,
+				"group-1",
+				string(query.GroupID),
+			)
+
+			return &appprayergroup.GetResult{
+				PrayerGroup: domain.PrayerGroup{
+					ID:          "group-1",
+					Name:        "Young Adults",
+					Description: "Prayer group for young adults",
+					Status:      domain.StatusActive,
+				},
+			}, nil
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		get: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodGet
+
+	req.SetPathValue(
+		"groupID",
+		"group-1",
+	)
+
+	rec := httptest.NewRecorder()
+
+	handler.GetByID(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusOK,
+		rec.Code,
+	)
+
+	var response map[string]any
+
+	require.NoError(
+		t,
+		json.Unmarshal(
+			rec.Body.Bytes(),
+			&response,
+		),
+	)
+
+	group := response["prayerGroup"].(map[string]any)
+
+	assert.Equal(
+		t,
+		"group-1",
+		group["id"],
+	)
+
+	assert.Equal(
+		t,
+		"Young Adults",
+		group["name"],
+	)
+
+	assert.Equal(
+		t,
+		"Prayer group for young adults",
+		group["description"],
+	)
+
+	assert.Equal(
+		t,
+		string(domain.StatusActive),
+		group["status"],
+	)
+}
+
+func TestPrayerGroupHandler_GetByID_ServiceUnauthorized(t *testing.T) {
+	mock := &mockGetService{
+		getFn: func(
+			context.Context,
+			appprayergroup.GetQuery,
+		) (*appprayergroup.GetResult, error) {
+			return nil, appprayergroup.ErrUnauthorized
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		get: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodGet
+	req.SetPathValue("groupID", "group-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.GetByID(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"unauthorized",
+	)
+}
+
+func TestPrayerGroupHandler_GetByID_ActorNotFound(t *testing.T) {
+	mock := &mockGetService{
+		getFn: func(
+			context.Context,
+			appprayergroup.GetQuery,
+		) (*appprayergroup.GetResult, error) {
+			return nil, appprayergroup.ErrActorNotFound
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		get: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodGet
+	req.SetPathValue("groupID", "group-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.GetByID(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"actor not found",
+	)
+}
+
+func TestPrayerGroupHandler_GetByID_PrayerGroupNotFound(t *testing.T) {
+	mock := &mockGetService{
+		getFn: func(
+			context.Context,
+			appprayergroup.GetQuery,
+		) (*appprayergroup.GetResult, error) {
+			return nil, appprayergroup.ErrPrayerGroupNotFound
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		get: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodGet
+	req.SetPathValue("groupID", "group-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.GetByID(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"prayer group not found",
+	)
+}
+
+func TestPrayerGroupHandler_GetByID_Forbidden(t *testing.T) {
+	mock := &mockGetService{
+		getFn: func(
+			context.Context,
+			appprayergroup.GetQuery,
+		) (*appprayergroup.GetResult, error) {
+			return nil, appprayergroup.ErrForbidden
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		get: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodGet
+	req.SetPathValue("groupID", "group-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.GetByID(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusForbidden,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"forbidden",
+	)
+}
+
+func TestPrayerGroupHandler_GetByID_GenericError(t *testing.T) {
+	mock := &mockGetService{
+		getFn: func(
+			context.Context,
+			appprayergroup.GetQuery,
+		) (*appprayergroup.GetResult, error) {
+			return nil, errors.New("database error")
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		get: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodGet
+	req.SetPathValue("groupID", "group-1")
+
+	rec := httptest.NewRecorder()
+
+	handler.GetByID(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusInternalServerError,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"database error",
 	)
 }
