@@ -120,6 +120,20 @@ func (m *mockGetService) Get(
 	return m.getFn(ctx, query)
 }
 
+type mockListService struct {
+	listFn func(
+		context.Context,
+		appprayergroup.ListQuery,
+	) (*appprayergroup.ListResult, error)
+}
+
+func (m *mockListService) List(
+	ctx context.Context,
+	query appprayergroup.ListQuery,
+) (*appprayergroup.ListResult, error) {
+	return m.listFn(ctx, query)
+}
+
 func requestWithClaims(body string) *http.Request {
 	req := httptest.NewRequest(
 		http.MethodPost,
@@ -2011,6 +2025,258 @@ func TestPrayerGroupHandler_GetByID_GenericError(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	handler.GetByID(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusInternalServerError,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"database error",
+	)
+}
+
+func TestPrayerGroupHandler_Get_Unauthorized(t *testing.T) {
+	handler := &PrayerGroupHandler{}
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/groups",
+		nil,
+	)
+
+	rec := httptest.NewRecorder()
+
+	handler.Get(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"unauthorized",
+	)
+}
+
+func TestPrayerGroupHandler_Get_Success(t *testing.T) {
+	mock := &mockListService{
+		listFn: func(
+			ctx context.Context,
+			query appprayergroup.ListQuery,
+		) (*appprayergroup.ListResult, error) {
+			assert.Equal(
+				t,
+				"user-123",
+				query.ActorExternalID,
+			)
+
+			return &appprayergroup.ListResult{
+				PrayerGroups: []domain.PrayerGroup{
+					{
+						ID:          "group-1",
+						Name:        "Young Adults",
+						Description: "Prayer group for young adults",
+						Status:      domain.StatusActive,
+					},
+					{
+						ID:          "group-2",
+						Name:        "Families",
+						Description: "Prayer group for families",
+						Status:      domain.StatusInactive,
+					},
+				},
+			}, nil
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		list: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodGet
+
+	rec := httptest.NewRecorder()
+
+	handler.Get(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusOK,
+		rec.Code,
+	)
+
+	var response map[string]any
+
+	require.NoError(
+		t,
+		json.Unmarshal(
+			rec.Body.Bytes(),
+			&response,
+		),
+	)
+
+	groups, ok := response["prayerGroups"].([]any)
+
+	require.True(
+		t,
+		ok,
+	)
+
+	require.Len(
+		t,
+		groups,
+		2,
+	)
+
+	first := groups[0].(map[string]any)
+
+	assert.Equal(
+		t,
+		"group-1",
+		first["id"],
+	)
+
+	assert.Equal(
+		t,
+		"Young Adults",
+		first["name"],
+	)
+
+	assert.Equal(
+		t,
+		"Prayer group for young adults",
+		first["description"],
+	)
+
+	assert.Equal(
+		t,
+		string(domain.StatusActive),
+		first["status"],
+	)
+
+	second := groups[1].(map[string]any)
+
+	assert.Equal(
+		t,
+		"group-2",
+		second["id"],
+	)
+
+	assert.Equal(
+		t,
+		"Families",
+		second["name"],
+	)
+
+	assert.Equal(
+		t,
+		"Prayer group for families",
+		second["description"],
+	)
+
+	assert.Equal(
+		t,
+		string(domain.StatusInactive),
+		second["status"],
+	)
+}
+
+func TestPrayerGroupHandler_Get_ServiceUnauthorized(t *testing.T) {
+	mock := &mockListService{
+		listFn: func(
+			context.Context,
+			appprayergroup.ListQuery,
+		) (*appprayergroup.ListResult, error) {
+			return nil, appprayergroup.ErrUnauthorized
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		list: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodGet
+
+	rec := httptest.NewRecorder()
+
+	handler.Get(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"unauthorized",
+	)
+}
+
+func TestPrayerGroupHandler_Get_ActorNotFound(t *testing.T) {
+	mock := &mockListService{
+		listFn: func(
+			context.Context,
+			appprayergroup.ListQuery,
+		) (*appprayergroup.ListResult, error) {
+			return nil, appprayergroup.ErrActorNotFound
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		list: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodGet
+
+	rec := httptest.NewRecorder()
+
+	handler.Get(rec, req)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		rec.Code,
+	)
+
+	assert.Contains(
+		t,
+		rec.Body.String(),
+		"actor not found",
+	)
+}
+
+func TestPrayerGroupHandler_Get_GenericError(t *testing.T) {
+	mock := &mockListService{
+		listFn: func(
+			context.Context,
+			appprayergroup.ListQuery,
+		) (*appprayergroup.ListResult, error) {
+			return nil, errors.New("database error")
+		},
+	}
+
+	handler := &PrayerGroupHandler{
+		list: mock,
+	}
+
+	req := requestWithClaims("")
+	req.Method = http.MethodGet
+
+	rec := httptest.NewRecorder()
+
+	handler.Get(rec, req)
 
 	assert.Equal(
 		t,
