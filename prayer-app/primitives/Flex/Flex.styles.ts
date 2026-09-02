@@ -72,7 +72,9 @@ export const flexVariants = cva(
 
                 lg: "gap-6",
 
-                xl: "gap-8"
+                xl: "gap-8",
+
+                "2xl": "gap-10"
             }
 
         },
