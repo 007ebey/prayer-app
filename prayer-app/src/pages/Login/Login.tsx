@@ -145,9 +145,7 @@ const Login = ({
                             <Globe size={18} />
                         }
                         onClick={() =>
-                            onGoogleLogin?.(
-                                role
-                            )
+                            onGoogleLogin?.(role)
                         }
                     >
                         Continue with Google
@@ -161,9 +159,7 @@ const Login = ({
                             <Camera size={18} />
                         }
                         onClick={() =>
-                            onInstagramLogin?.(
-                                role
-                            )
+                            onInstagramLogin?.(role)
                         }
                     >
                         Continue with Instagram
