@@ -6,14 +6,15 @@ import (
 	"testing"
 
 	appauth "prayer-api/internal/application/auth"
+	"prayer-api/internal/domain/identity"
 	"prayer-api/internal/domain/prayergroup"
 	"prayer-api/internal/domain/user"
 	"prayer-api/internal/repository/memory"
-	"prayer-api/internal/domain/identity"
+	"prayer-api/internal/config"
 )
 
 func newTestService() (*appauth.Service, *memory.UserRepository, *memory.PrayerGroupRepository) {
-	users := memory.NewUserRepository()
+	users := memory.NewUserRepository(config.Config{})
 	roles := memory.NewRoleRepository()
 	groups := memory.NewPrayerGroupRepository()
 	ids := memory.NewIDGenerator()
@@ -36,6 +37,7 @@ func TestLoginCreatesNewUser(t *testing.T) {
 		ctx,
 		appauth.LoginCommand{
 			ExternalID: "clerk_test_123",
+			Email:      identity.Email("anna.mary@example.com"),
 			Name:       "Anna Mary",
 		},
 	)
@@ -56,6 +58,10 @@ func TestLoginCreatesNewUser(t *testing.T) {
 		t.Fatalf("expected external ID clerk_test_123, got %s", result.User.ExternalID)
 	}
 
+	if result.User.Email != "anna.mary@example.com" {
+		t.Fatalf("expected email anna.mary@example.com, got %s", result.User.Email)
+	}
+
 	if result.User.Name != "Anna Mary" {
 		t.Fatalf("expected name Anna Mary, got %s", result.User.Name)
 	}
@@ -72,6 +78,10 @@ func TestLoginCreatesNewUser(t *testing.T) {
 	if stored == nil {
 		t.Fatal("expected user to be persisted")
 	}
+
+	if stored.Email != "anna.mary@example.com" {
+		t.Fatalf("expected stored email anna.mary@example.com, got %s", stored.Email)
+	}
 }
 
 func TestNewUserGetsMembersRole(t *testing.T) {
@@ -81,6 +91,7 @@ func TestNewUserGetsMembersRole(t *testing.T) {
 		context.Background(),
 		appauth.LoginCommand{
 			ExternalID: "clerk_member_test",
+			Email:      identity.Email("john.samuel@example.com"),
 			Name:       "John Samuel",
 		},
 	)
@@ -105,6 +116,7 @@ func TestNewUserGetsVisitorGroupAccess(t *testing.T) {
 		context.Background(),
 		appauth.LoginCommand{
 			ExternalID: "clerk_visitor_test",
+			Email:      identity.Email("robert.k@example.com"),
 			Name:       "Robert K",
 		},
 	)
@@ -140,6 +152,7 @@ func TestLoginExistingUserDoesNotCreateAnotherUser(t *testing.T) {
 		ctx,
 		appauth.LoginCommand{
 			ExternalID: "clerk_existing_test",
+			Email:      identity.Email("david.thomas@example.com"),
 			Name:       "David Thomas",
 		},
 	)
@@ -152,6 +165,7 @@ func TestLoginExistingUserDoesNotCreateAnotherUser(t *testing.T) {
 		ctx,
 		appauth.LoginCommand{
 			ExternalID: "clerk_existing_test",
+			Email:      identity.Email("david.thomas@example.com"),
 			Name:       "David Thomas",
 		},
 	)
@@ -181,6 +195,7 @@ func TestBlockedUserCannotLogin(t *testing.T) {
 		ctx,
 		appauth.LoginCommand{
 			ExternalID: "clerk_blocked_test",
+			Email:      identity.Email("blocked.user@example.com"),
 			Name:       "Blocked User",
 		},
 	)
@@ -195,6 +210,7 @@ func TestBlockedUserCannotLogin(t *testing.T) {
 		ctx,
 		appauth.LoginCommand{
 			ExternalID: "clerk_blocked_test",
+			Email:      identity.Email("blocked.user@example.com"),
 			Name:       "Blocked User",
 		},
 	)
@@ -211,6 +227,7 @@ func TestLoginRequiresAuthenticatedIdentity(t *testing.T) {
 		context.Background(),
 		appauth.LoginCommand{
 			ExternalID: "",
+			Email:      identity.Email("anonymous@example.com"),
 			Name:       "Anonymous",
 		},
 	)
@@ -228,6 +245,7 @@ func TestExistingUserVisitorAccessIsNotDuplicated(t *testing.T) {
 		ctx,
 		appauth.LoginCommand{
 			ExternalID: "clerk_access_test",
+			Email:      identity.Email("anna.mary@example.com"),
 			Name:       "Anna Mary",
 		},
 	)
@@ -240,6 +258,7 @@ func TestExistingUserVisitorAccessIsNotDuplicated(t *testing.T) {
 		ctx,
 		appauth.LoginCommand{
 			ExternalID: "clerk_access_test",
+			Email:      identity.Email("anna.mary@example.com"),
 			Name:       "Anna Mary",
 		},
 	)

@@ -12,4 +12,5 @@ var (
 	ErrPrayerGroupAlreadyAssigned = errors.New("prayer group already assigned to user")
 	ErrPrayerGroupNotAssigned = errors.New("prayer group is not assigned to user")
 	ErrUserNotFound          = errors.New("user not found")
+	ErrEmailRequired		 = errors.New("email is required")
 )

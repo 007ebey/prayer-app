@@ -10,9 +10,10 @@ import (
 
 	appauth "prayer-api/internal/application/auth"
 	"prayer-api/internal/application/userrole"
+	"prayer-api/internal/domain/identity"
 	"prayer-api/internal/domain/user"
 	"prayer-api/internal/repository/memory"
-	"prayer-api/internal/domain/identity"
+	"prayer-api/internal/config"
 )
 
 type userRoleHandlerTestEnvironment struct {
@@ -22,7 +23,7 @@ type userRoleHandlerTestEnvironment struct {
 }
 
 func newUserRoleHandlerTestEnvironment() *userRoleHandlerTestEnvironment {
-	users := memory.NewUserRepository()
+	users := memory.NewUserRepository(config.Config{})
 	roles := memory.NewRoleRepository()
 	groups := memory.NewPrayerGroupRepository()
 	ids := memory.NewIDGenerator()
@@ -59,6 +60,7 @@ func createHTTPTestUser(
 		appauth.LoginCommand{
 			ExternalID: externalID,
 			Name:       name,
+			Email:      identity.Email(externalID + "@example.com"),
 		},
 	)
 
@@ -126,6 +128,7 @@ type assignRoleResponse struct {
 	User struct {
 		ID     string   `json:"id"`
 		Name   string   `json:"name"`
+		Email  string   `json:"email"`
 		Status string   `json:"status"`
 		Roles  []string `json:"roles"`
 	} `json:"user"`

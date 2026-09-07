@@ -13,18 +13,20 @@ const (
 )
 
 type User struct {
-	ID              identity.UserID
-	ExternalID      string
-	Name            string
-	Status          Status
-	RoleIDs         []identity.RoleID
-	PrayerGroupIDs  []identity.PrayerGroupID
+	ID             identity.UserID
+	ExternalID     string
+	Email          identity.Email
+	Name           string
+	Status         Status
+	RoleIDs        []identity.RoleID
+	PrayerGroupIDs []identity.PrayerGroupID
 }
 
 func New(
 	id identity.UserID,
 	externalID string,
 	name string,
+	email identity.Email,
 	defaultRoleID identity.RoleID,
 ) (*User, error) {
 	if id == "" {
@@ -36,6 +38,11 @@ func New(
 		return nil, ErrExternalIDRequired
 	}
 
+	normalizedEmail := normalizeEmail(email)
+	if normalizedEmail == "" {
+		return nil, ErrEmailRequired
+	}
+
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, ErrDisplayNameRequired
@@ -44,11 +51,16 @@ func New(
 	return &User{
 		ID:             id,
 		ExternalID:     externalID,
+		Email:          identity.Email(normalizedEmail),
 		Name:           name,
 		Status:         StatusActive,
 		RoleIDs:        []identity.RoleID{defaultRoleID},
 		PrayerGroupIDs: []identity.PrayerGroupID{},
 	}, nil
+}
+
+func normalizeEmail(email identity.Email) string {
+	return strings.ToLower(strings.TrimSpace(string(email)))
 }
 
 func (u *User) IsActive() bool {
@@ -96,11 +108,7 @@ func (u *User) AssignPrayerGroup(
 		}
 	}
 
-	u.PrayerGroupIDs = append(
-		u.PrayerGroupIDs,
-		groupID,
-	)
-
+	u.PrayerGroupIDs = append(u.PrayerGroupIDs, groupID)
 	return nil
 }
 

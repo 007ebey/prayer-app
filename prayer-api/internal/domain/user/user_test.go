@@ -13,6 +13,7 @@ func TestNewUserIsActiveAndGetsDefaultRole(t *testing.T) {
 		identity.UserID("user_1"),
 		"clerk_123",
 		"Anna Mary",
+		"anna.mary@example.com",
 		identity.RoleID("role_members"),
 	)
 
@@ -22,6 +23,10 @@ func TestNewUserIsActiveAndGetsDefaultRole(t *testing.T) {
 
 	if !u.IsActive() {
 		t.Fatal("expected new user to be active")
+	}
+
+	if u.Email != "anna.mary@example.com" {
+		t.Fatalf("expected email anna.mary@example.com, got %s", u.Email)
 	}
 
 	if len(u.RoleIDs) != 1 {
@@ -38,6 +43,7 @@ func TestUserCanBeBlockedAndUnblocked(t *testing.T) {
 		identity.UserID("user_1"),
 		"clerk_123",
 		"Anna Mary",
+		"anna.mary@example.com",
 		identity.RoleID("role_members"),
 	)
 
@@ -67,6 +73,7 @@ func TestDuplicateRoleCannotBeAssigned(t *testing.T) {
 		identity.UserID("user_1"),
 		"clerk_123",
 		"Anna Mary",
+		"anna.mary@example.com",
 		identity.RoleID("role_members"),
 	)
 

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"prayer-api/internal/domain/user"
 	"prayer-api/internal/domain/identity"
+	"prayer-api/internal/domain/user"
 )
 
 func TestRemoveRoleRemovesAssignedRole(t *testing.T) {
@@ -117,6 +117,7 @@ func newUserForRemoveRoleTest(
 		identity.UserID("user_remove_test"),
 		"clerk_remove_test",
 		"Remove Test",
+		"remove.test@example.com",
 		identity.RoleID("role_members"),
 	)
 

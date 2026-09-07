@@ -7,8 +7,9 @@ import (
 
 	appauth "prayer-api/internal/application/auth"
 	"prayer-api/internal/application/userprofile"
-	"prayer-api/internal/repository/memory"
 	"prayer-api/internal/domain/identity"
+	"prayer-api/internal/repository/memory"
+	"prayer-api/internal/config"
 )
 
 type testEnvironment struct {
@@ -17,7 +18,7 @@ type testEnvironment struct {
 }
 
 func newTestEnvironment() *testEnvironment {
-	users := memory.NewUserRepository()
+	users := memory.NewUserRepository(config.Config{})
 	roles := memory.NewRoleRepository()
 	groups := memory.NewPrayerGroupRepository()
 	ids := memory.NewIDGenerator()
@@ -45,6 +46,7 @@ func TestGetOwnProfile(t *testing.T) {
 		ctx,
 		appauth.LoginCommand{
 			ExternalID: "clerk_profile_1",
+			Email:      identity.Email("anna.mary@example.com"),
 			Name:       "Anna Mary",
 		},
 	)
@@ -85,6 +87,13 @@ func TestGetOwnProfile(t *testing.T) {
 			result.User.Name,
 		)
 	}
+
+	if result.User.Email != "anna.mary@example.com" {
+		t.Fatalf(
+			"expected anna.mary@example.com, got %s",
+			result.User.Email,
+		)
+	}
 }
 
 func TestGetOwnProfileReturnsMembersRole(t *testing.T) {
@@ -95,6 +104,7 @@ func TestGetOwnProfileReturnsMembersRole(t *testing.T) {
 		ctx,
 		appauth.LoginCommand{
 			ExternalID: "clerk_role_profile",
+			Email:      identity.Email("role.user@example.com"),
 			Name:       "Role User",
 		},
 	)
@@ -149,6 +159,7 @@ func TestGetOwnProfileReturnsVisitorGroup(t *testing.T) {
 		ctx,
 		appauth.LoginCommand{
 			ExternalID: "clerk_group_profile",
+			Email:      identity.Email("group.user@example.com"),
 			Name:       "Group User",
 		},
 	)
@@ -206,6 +217,7 @@ func TestGetOtherUserIsForbidden(t *testing.T) {
 		ctx,
 		appauth.LoginCommand{
 			ExternalID: "clerk_actor",
+			Email:      identity.Email("actor@example.com"),
 			Name:       "Actor",
 		},
 	)
@@ -218,6 +230,7 @@ func TestGetOtherUserIsForbidden(t *testing.T) {
 		ctx,
 		appauth.LoginCommand{
 			ExternalID: "clerk_target",
+			Email:      identity.Email("target@example.com"),
 			Name:       "Target",
 		},
 	)

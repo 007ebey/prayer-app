@@ -7,9 +7,10 @@ import (
 
 	appauth "prayer-api/internal/application/auth"
 	"prayer-api/internal/application/userrole"
+	"prayer-api/internal/domain/identity"
 	"prayer-api/internal/domain/user"
 	"prayer-api/internal/repository/memory"
-	"prayer-api/internal/domain/identity"
+	"prayer-api/internal/config"
 )
 
 type testEnvironment struct {
@@ -20,7 +21,7 @@ type testEnvironment struct {
 }
 
 func newTestEnvironment() *testEnvironment {
-	users := memory.NewUserRepository()
+	users := memory.NewUserRepository(config.Config{})
 	roles := memory.NewRoleRepository()
 	groups := memory.NewPrayerGroupRepository()
 	ids := memory.NewIDGenerator()
@@ -53,6 +54,7 @@ func createUser(
 		context.Background(),
 		appauth.LoginCommand{
 			ExternalID: externalID,
+			Email:      identity.Email(externalID + "@example.com"),
 			Name:       name,
 		},
 	)

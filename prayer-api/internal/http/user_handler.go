@@ -82,6 +82,7 @@ func (h *UserHandler) Get(w http.ResponseWriter, r *http.Request) {
 		"user": map[string]any{
 			"id":     result.User.ID,
 			"name":   result.User.Name,
+			"email":  result.User.Email,
 			"status": result.User.Status,
 		},
 		"roles":        roles,

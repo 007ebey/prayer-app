@@ -35,6 +35,13 @@ func (r *removeUserRepositoryStub) FindByExternalID(
 	return nil, nil
 }
 
+func (r *removeUserRepositoryStub) FindByEmail(
+	_ context.Context,
+	_ string,
+) (*domainuser.User, error) {
+	return nil, nil
+}
+
 func (r *removeUserRepositoryStub) Save(
 	_ context.Context,
 	_ *domainuser.User,
@@ -130,6 +137,7 @@ func TestRemovePrayerGroupService_Remove(t *testing.T) {
 	user, err := domainuser.New(
 		domainid.UserID("user-1"),
 		"external-id",
+		"john@example.com",
 		"John",
 		roleID,
 	)
@@ -209,6 +217,7 @@ func TestRemovePrayerGroupService_PrayerGroupNotFound(t *testing.T) {
 	user, _ := domainuser.New(
 		domainid.UserID("user"),
 		"external",
+		"john@example.com",
 		"John",
 		roleID,
 	)
@@ -238,6 +247,7 @@ func TestRemovePrayerGroupService_PrayerGroupNotAssigned(t *testing.T) {
 	user, _ := domainuser.New(
 		domainid.UserID("user"),
 		"external",
+		"john@example.com",
 		"John",
 		roleID,
 	)
@@ -277,6 +287,7 @@ func TestRemovePrayerGroupService_UpdateFails(t *testing.T) {
 	user, _ := domainuser.New(
 		domainid.UserID("user"),
 		"external",
+		"john@example.com",
 		"John",
 		roleID,
 	)

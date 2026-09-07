@@ -8,6 +8,7 @@ import (
 
 	appauth "prayer-api/internal/application/auth"
 	identityauth "prayer-api/internal/auth"
+	domainid "prayer-api/internal/domain/identity"
 )
 
 type AuthHandler struct {
@@ -15,7 +16,10 @@ type AuthHandler struct {
 	identity identityauth.Provider
 }
 
-func NewAuthHandler(login *appauth.Service, identity identityauth.Provider) *AuthHandler {
+func NewAuthHandler(
+	login *appauth.Service,
+	identity identityauth.Provider,
+) *AuthHandler {
 	return &AuthHandler{
 		login:    login,
 		identity: identity,
@@ -23,17 +27,20 @@ func NewAuthHandler(login *appauth.Service, identity identityauth.Provider) *Aut
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	// Is the Clerk token valid?
+	// Verify that the Clerk session claims exist in the request context.
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
-	if !ok {
+	if !ok || claims == nil || claims.Subject == "" {
 		writeJSON(w, http.StatusUnauthorized, map[string]any{
 			"error": "unauthorized",
 		})
 		return
 	}
 
-	// Does the token belong to someone?
-	identity, err := h.identity.GetIdentity(r.Context(), claims.Subject)
+	// Retrieve the identity associated with the Clerk subject.
+	externalIdentity, err := h.identity.GetIdentity(
+		r.Context(),
+		claims.Subject,
+	)
 	if err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]any{
 			"error": "unable to retrieve identity",
@@ -41,15 +48,15 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Is the token expired?
+	// Provision or retrieve the application user.
 	result, err := h.login.Login(
 		r.Context(),
 		appauth.LoginCommand{
-			ExternalID: identity.ExternalID,
-			Name:       identity.Name,
+			ExternalID: externalIdentity.ExternalID,
+			Name:       externalIdentity.Name,
+			Email:      domainid.Email(externalIdentity.Email),
 		},
 	)
-
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{
 			"error": err.Error(),
@@ -75,6 +82,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		"user": map[string]any{
 			"id":     result.User.ID,
 			"name":   result.User.Name,
+			"email":  result.User.Email,
 			"status": result.User.Status,
 			"roles":  result.User.RoleIDs,
 		},
@@ -86,5 +94,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 func writeJSON(w http.ResponseWriter, status int, value any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
+
 	_ = json.NewEncoder(w).Encode(value)
 }

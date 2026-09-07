@@ -9,6 +9,7 @@ import (
 	"prayer-api/internal/application/userrole"
 	"prayer-api/internal/domain/user"
 	"prayer-api/internal/repository/memory"
+	"prayer-api/internal/config"
 )
 
 func TestAdministratorCanRemoveRoleFromUser(t *testing.T) {
@@ -215,7 +216,7 @@ func TestRemoveRoleIsIdempotent(t *testing.T) {
 func newRemoveRoleService(t *testing.T) (*userrole.Service, *memory.UserRepository) {
 	t.Helper()
 
-	users := memory.NewUserRepository()
+	users := memory.NewUserRepository(config.Config{})
 	roles := memory.NewRoleRepository()
 
 	return userrole.NewService(users, roles), users
@@ -233,6 +234,7 @@ func createRemoveTestUser(
 		identity.UserID(id),
 		externalID,
 		id,
+		identity.Email(externalID+"@example.com"),
 		identity.RoleID("role_members"),
 	)
 

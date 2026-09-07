@@ -1,10 +1,15 @@
 package auth
 
-import "context"
+import 
+  (
+	"context"
+	domainid "prayer-api/internal/domain/identity"
+  )
 
 type Identity struct {
 	ExternalID string
 	Name       string
+	Email      domainid.Email
 }
 
 type Provider interface {

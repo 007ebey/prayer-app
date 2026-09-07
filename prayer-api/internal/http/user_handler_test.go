@@ -11,6 +11,8 @@ import (
 	appauth "prayer-api/internal/application/auth"
 	"prayer-api/internal/application/userprofile"
 	"prayer-api/internal/repository/memory"
+	identity "prayer-api/internal/domain/identity"
+	"prayer-api/internal/config"
 )
 
 type userHandlerTestEnvironment struct {
@@ -19,7 +21,7 @@ type userHandlerTestEnvironment struct {
 }
 
 func newUserHandlerTestEnvironment() *userHandlerTestEnvironment {
-	users := memory.NewUserRepository()
+	users := memory.NewUserRepository(config.Config{})
 	roles := memory.NewRoleRepository()
 	groups := memory.NewPrayerGroupRepository()
 	ids := memory.NewIDGenerator()
@@ -73,6 +75,7 @@ type userProfileResponse struct {
 	User struct {
 		ID     string `json:"id"`
 		Name   string `json:"name"`
+		Email  string `json:"email"`
 		Status string `json:"status"`
 	} `json:"user"`
 
@@ -97,6 +100,7 @@ func TestGetUserAPIReturnsOwnProfile(t *testing.T) {
 		appauth.LoginCommand{
 			ExternalID: "clerk_api_profile",
 			Name:       "Anna Mary",
+			Email:      identity.Email("anna.mary@example.com"),
 		},
 	)
 
@@ -143,6 +147,13 @@ func TestGetUserAPIReturnsOwnProfile(t *testing.T) {
 		)
 	}
 
+	if body.User.Email != "anna.mary@example.com" {
+		t.Fatalf(
+			"expected anna.mary@example.com, got %s",
+			body.User.Email,
+		)
+	}
+
 	if body.User.Status != "active" {
 		t.Fatalf(
 			"expected active user, got %s",
@@ -159,6 +170,7 @@ func TestGetUserAPIReturnsRoleDetails(t *testing.T) {
 		appauth.LoginCommand{
 			ExternalID: "clerk_api_roles",
 			Name:       "Role User",
+			Email:      identity.Email("role.user@example.com"),
 		},
 	)
 
@@ -224,6 +236,7 @@ func TestGetUserAPIReturnsVisitorGroup(t *testing.T) {
 		appauth.LoginCommand{
 			ExternalID: "clerk_api_groups",
 			Name:       "Group User",
+			Email:      identity.Email("group.user@example.com"),
 		},
 	)
 
@@ -294,6 +307,7 @@ func TestGetUserAPIRejectsOtherUser(t *testing.T) {
 		appauth.LoginCommand{
 			ExternalID: "clerk_actor_api",
 			Name:       "Actor",
+			Email:      identity.Email("actor@example.com"),
 		},
 	)
 
@@ -306,6 +320,7 @@ func TestGetUserAPIRejectsOtherUser(t *testing.T) {
 		appauth.LoginCommand{
 			ExternalID: "clerk_target_api",
 			Name:       "Target",
+			Email:      identity.Email("target@example.com"),
 		},
 	)
 

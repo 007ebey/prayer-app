@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"prayer-api/internal/domain/identity"
 	"prayer-api/internal/domain/prayergroup"
 	"prayer-api/internal/domain/role"
 	"prayer-api/internal/domain/user"
-	"prayer-api/internal/domain/identity"
 )
 
 var (
@@ -20,6 +20,8 @@ var (
 type UserRepository interface {
 	FindByExternalID(ctx context.Context, externalID string) (*user.User, error)
 	Save(ctx context.Context, u *user.User) error
+	FindByEmail(ctx context.Context, email string) (*user.User, error)
+	Update(ctx context.Context, u *user.User) error
 }
 
 type RoleRepository interface {
@@ -28,7 +30,11 @@ type RoleRepository interface {
 
 type PrayerGroupRepository interface {
 	FindVisitorGroup(ctx context.Context) (*prayergroup.PrayerGroup, error)
-	FindAccess(ctx context.Context, userID identity.UserID, groupID identity.PrayerGroupID) (*prayergroup.Access, error)
+	FindAccess(
+		ctx context.Context,
+		userID identity.UserID,
+		groupID identity.PrayerGroupID,
+	) (*prayergroup.Access, error)
 	SaveAccess(ctx context.Context, access prayergroup.Access) error
 }
 
@@ -39,6 +45,7 @@ type IDGenerator interface {
 type LoginCommand struct {
 	ExternalID string
 	Name       string
+	Email      identity.Email
 }
 
 type LoginResult struct {
@@ -54,7 +61,12 @@ type Service struct {
 	ids    IDGenerator
 }
 
-func NewService(users UserRepository, roles RoleRepository, groups PrayerGroupRepository, ids IDGenerator) *Service {
+func NewService(
+	users UserRepository,
+	roles RoleRepository,
+	groups PrayerGroupRepository,
+	ids IDGenerator,
+) *Service {
 	return &Service{
 		users:  users,
 		roles:  roles,
@@ -63,7 +75,10 @@ func NewService(users UserRepository, roles RoleRepository, groups PrayerGroupRe
 	}
 }
 
-func (s *Service) Login(ctx context.Context, cmd LoginCommand) (*LoginResult, error) {
+func (s *Service) Login(
+	ctx context.Context,
+	cmd LoginCommand,
+) (*LoginResult, error) {
 	if cmd.ExternalID == "" {
 		return nil, ErrIdentityRequired
 	}
@@ -71,6 +86,26 @@ func (s *Service) Login(ctx context.Context, cmd LoginCommand) (*LoginResult, er
 	existing, err := s.users.FindByExternalID(ctx, cmd.ExternalID)
 	if err != nil {
 		return nil, err
+	}
+
+	// If the Clerk external ID is not linked yet, try to find
+	// the existing user by email and link the external ID.
+	if existing == nil && cmd.Email != "" {
+		existing, err = s.users.FindByEmail(
+			ctx,
+			string(cmd.Email),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if existing != nil {
+			existing.ExternalID = cmd.ExternalID
+
+			if err := s.users.Update(ctx, existing); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	if existing != nil {
@@ -84,7 +119,10 @@ func (s *Service) Login(ctx context.Context, cmd LoginCommand) (*LoginResult, er
 	return s.provisionUser(ctx, cmd)
 }
 
-func (s *Service) provisionUser(ctx context.Context, cmd LoginCommand) (*LoginResult, error) {
+func (s *Service) provisionUser(
+	ctx context.Context,
+	cmd LoginCommand,
+) (*LoginResult, error) {
 	memberRole, err := s.roles.FindDefaultMemberRole(ctx)
 	if err != nil {
 		return nil, err
@@ -111,6 +149,7 @@ func (s *Service) provisionUser(ctx context.Context, cmd LoginCommand) (*LoginRe
 		s.ids.NewUserID(),
 		cmd.ExternalID,
 		cmd.Name,
+		cmd.Email,
 		memberRole.ID,
 	)
 	if err != nil {
@@ -131,7 +170,7 @@ func (s *Service) provisionUser(ctx context.Context, cmd LoginCommand) (*LoginRe
 	}
 
 	return &LoginResult{
-		User: newUser,
+		User:              newUser,
 		PrayerGroupAccess: []prayergroup.Access{
 			visitorAccess,
 		},
@@ -139,7 +178,10 @@ func (s *Service) provisionUser(ctx context.Context, cmd LoginCommand) (*LoginRe
 	}, nil
 }
 
-func (s *Service) existingUserResult(ctx context.Context, existing *user.User) (*LoginResult, error) {
+func (s *Service) existingUserResult(
+	ctx context.Context,
+	existing *user.User,
+) (*LoginResult, error) {
 	visitorGroup, err := s.groups.FindVisitorGroup(ctx)
 	if err != nil {
 		return nil, err
@@ -149,7 +191,11 @@ func (s *Service) existingUserResult(ctx context.Context, existing *user.User) (
 		return nil, ErrVisitorGroupNotFound
 	}
 
-	access, err := s.groups.FindAccess(ctx, existing.ID, visitorGroup.ID)
+	access, err := s.groups.FindAccess(
+		ctx,
+		existing.ID,
+		visitorGroup.ID,
+	)
 	if err != nil {
 		return nil, err
 	}

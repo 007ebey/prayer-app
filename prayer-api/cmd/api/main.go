@@ -24,7 +24,7 @@ func main() {
 
 	clerk.SetKey(cfg.ClerkSecretKey)
 
-	users := memory.NewUserRepository()
+	users := memory.NewUserRepository(cfg)
 	roles := memory.NewRoleRepository()
 	groups := memory.NewPrayerGroupRepository()
 	ids := memory.NewIDGenerator()

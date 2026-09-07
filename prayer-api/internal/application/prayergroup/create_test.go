@@ -9,6 +9,7 @@ import (
 	"prayer-api/internal/domain/role"
 	"prayer-api/internal/domain/user"
 	"prayer-api/internal/repository/memory"
+	"prayer-api/internal/config"
 )
 
 type createFixture struct {
@@ -25,7 +26,7 @@ type createFixture struct {
 func newCreateFixture(t *testing.T) *createFixture {
 	t.Helper()
 
-	users := memory.NewUserRepository()
+	users := memory.NewUserRepository(config.Config{})
 	roles := memory.NewRoleRepository()
 	groups := memory.NewPrayerGroupRepository()
 	ids := memory.NewIDGenerator()
@@ -62,6 +63,7 @@ func (f *createFixture) newUser(
 		id,
 		externalID,
 		displayName,
+		domainid.Email(externalID+"@example.com"),
 		roleIDs[0],
 	)
 	if err != nil {
@@ -649,13 +651,14 @@ func TestCreatePrayerGroupPersistsGroup(t *testing.T) {
 func TestCreatePrayerGroupDuplicateIDReturnsConflict(t *testing.T) {
 	ctx := context.Background()
 
-	users := memory.NewUserRepository()
+	users := memory.NewUserRepository(config.Config{})
 	roles := memory.NewRoleRepository()
 	groups := memory.NewPrayerGroupRepository()
 
 	admin, err := user.New(
 		domainid.UserID("user_admin"),
 		"clerk_admin",
+		domainid.Email("clerk_admin@example.com"),
 		"Administrator",
 		domainid.RoleID("role_members"),
 	)

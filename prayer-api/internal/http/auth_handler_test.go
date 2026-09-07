@@ -12,6 +12,8 @@ import (
 	appauth "prayer-api/internal/application/auth"
 	identityauth "prayer-api/internal/auth"
 	"prayer-api/internal/repository/memory"
+	"prayer-api/internal/config"
+	domainid "prayer-api/internal/domain/identity"
 )
 
 type fakeIdentityProvider struct {
@@ -28,7 +30,7 @@ func (f *fakeIdentityProvider) GetIdentity(ctx context.Context, externalID strin
 }
 
 func newTestAuthHandler(identity identityauth.Provider) *AuthHandler {
-	users := memory.NewUserRepository()
+	users := memory.NewUserRepository(config.Config{})
 	roles := memory.NewRoleRepository()
 	groups := memory.NewPrayerGroupRepository()
 	ids := memory.NewIDGenerator()
@@ -85,6 +87,7 @@ func TestLoginAPICreatesUser(t *testing.T) {
 		identity: identityauth.Identity{
 			ExternalID: "clerk_test_123",
 			Name:       "Anna Mary",
+			Email:      domainid.Email("anna@example.com"),
 		},
 	}
 
@@ -147,6 +150,7 @@ func TestLoginAPIExistingUserReturns200(t *testing.T) {
 		identity: identityauth.Identity{
 			ExternalID: "clerk_existing_123",
 			Name:       "Existing User",
+			Email:      domainid.Email("anna@example.com"),
 		},
 	}
 
