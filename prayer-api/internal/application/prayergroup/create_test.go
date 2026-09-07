@@ -658,8 +658,8 @@ func TestCreatePrayerGroupDuplicateIDReturnsConflict(t *testing.T) {
 	admin, err := user.New(
 		domainid.UserID("user_admin"),
 		"clerk_admin",
-		domainid.Email("clerk_admin@example.com"),
 		"Administrator",
+		domainid.Email("clerk_admin@example.com"),
 		domainid.RoleID("role_members"),
 	)
 	if err != nil {
