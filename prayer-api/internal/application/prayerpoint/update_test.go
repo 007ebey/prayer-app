@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -74,10 +72,12 @@ func TestService_Update_Success(t *testing.T) {
 
 	updatedPoint, err := service.Update(
 		ctx,
-		userID,
-		pointID,
-		" New title ",
-		" New content ",
+		UpdateInput{
+			UserID:  userID,
+			PointID: pointID,
+			Title:   "New title",
+			Content: "New content",
+		},
 	)
 
 	require.NoError(t, err)
@@ -116,10 +116,12 @@ func TestService_Update_FindByIDError(t *testing.T) {
 
 	updatedPoint, err := service.Update(
 		ctx,
-		identity.UserID("user-123"),
-		identity.PrayerPointID("point-123"),
-		"New title",
-		"New content",
+		UpdateInput{
+			UserID:  identity.UserID("user-123"),
+			PointID: identity.PrayerPointID("point-123"),
+			Title:   "New title",
+			Content: "New content",
+		},
 	)
 
 	assert.Nil(t, updatedPoint)
@@ -150,10 +152,12 @@ func TestService_UpdateNotFound(t *testing.T) {
 
 	updatedPoint, err := service.Update(
 		ctx,
-		identity.UserID("user-123"),
-		identity.PrayerPointID("point-123"),
-		"New title",
-		"New content",
+		UpdateInput{
+			UserID:  identity.UserID("user-123"),
+			PointID: identity.PrayerPointID("point-123"),
+			Title:   "New title",
+			Content: "New content",
+		},
 	)
 
 	assert.Nil(t, updatedPoint)
@@ -216,10 +220,12 @@ func TestService_UpdateAccessDenied(t *testing.T) {
 
 	updatedPoint, err := service.Update(
 		ctx,
-		userID,
-		pointID,
-		"New title",
-		"New content",
+		UpdateInput{
+			UserID:  userID,
+			PointID: pointID,
+			Title:   "New title",
+			Content: "New content",
+		},
 	)
 
 	assert.Nil(t, updatedPoint)
@@ -268,10 +274,12 @@ func TestService_UpdateAccessCheckError(t *testing.T) {
 
 	updatedPoint, err := service.Update(
 		ctx,
-		identity.UserID("user-123"),
-		identity.PrayerPointID("point-123"),
-		"New title",
-		"New content",
+		UpdateInput{
+			UserID:  identity.UserID("user-123"),
+			PointID: identity.PrayerPointID("point-123"),
+			Title:   "New title",
+			Content: "New content",
+		},
 	)
 
 	assert.Nil(t, updatedPoint)
@@ -327,10 +335,12 @@ func TestService_UpdateTitleValidationError(t *testing.T) {
 
 	updatedPoint, err := service.Update(
 		ctx,
-		identity.UserID("user-123"),
-		identity.PrayerPointID("point-123"),
-		"   ",
-		"New content",
+		UpdateInput{
+			UserID:  identity.UserID("user-123"),
+			PointID: identity.PrayerPointID("point-123"),
+			Title:   "   ",
+			Content: "New content",
+		},
 	)
 
 	assert.Nil(t, updatedPoint)
@@ -387,10 +397,12 @@ func TestService_UpdateContentValidationError(t *testing.T) {
 
 	updatedPoint, err := service.Update(
 		ctx,
-		identity.UserID("user-123"),
-		identity.PrayerPointID("point-123"),
-		"New title",
-		"   ",
+		UpdateInput{
+			UserID:  identity.UserID("user-123"),
+			PointID: identity.PrayerPointID("point-123"),
+			Title:   "New title",
+			Content: "   ",
+		},
 	)
 
 	assert.Nil(t, updatedPoint)
@@ -445,10 +457,12 @@ func TestService_UpdateRepositoryError(t *testing.T) {
 
 	updatedPoint, err := service.Update(
 		ctx,
-		identity.UserID("user-123"),
-		identity.PrayerPointID("point-123"),
-		"New title",
-		"New content",
+		UpdateInput{
+			UserID:  identity.UserID("user-123"),
+			PointID: identity.PrayerPointID("point-123"),
+			Title:   "New title",
+			Content: "New content",
+		},
 	)
 
 	assert.Nil(t, updatedPoint)
@@ -506,10 +520,12 @@ func TestService_UpdateDoesNotChangeGroupID(t *testing.T) {
 
 	updatedPoint, err := service.Update(
 		ctx,
-		identity.UserID("user-123"),
-		pointID,
-		"New title",
-		"New content",
+		UpdateInput{
+			UserID:  identity.UserID("user-123"),
+			PointID: pointID,
+			Title:   "New title",
+			Content: "New content",
+		},
 	)
 
 	require.NoError(t, err)
@@ -567,10 +583,12 @@ func TestService_UpdatePreservesCreatedAt(t *testing.T) {
 
 	updatedPoint, err := service.Update(
 		ctx,
-		identity.UserID("user-123"),
-		identity.PrayerPointID("point-123"),
-		"New title",
-		"New content",
+		UpdateInput{
+			UserID:  identity.UserID("user-123"),
+			PointID: identity.PrayerPointID("point-123"),
+			Title:   "New title",
+			Content: "New content",
+		},
 	)
 
 	require.NoError(t, err)
@@ -629,10 +647,12 @@ func TestService_UpdateAlreadyBlockedPoint(t *testing.T) {
 
 	updatedPoint, err := service.Update(
 		ctx,
-		identity.UserID("user-123"),
-		identity.PrayerPointID("point-123"),
-		"New title",
-		"New content",
+		UpdateInput{
+			UserID:  identity.UserID("user-123"),
+			PointID: identity.PrayerPointID("point-123"),
+			Title:   "New title",
+			Content: "New content",
+		},
 	)
 
 	require.NoError(t, err)

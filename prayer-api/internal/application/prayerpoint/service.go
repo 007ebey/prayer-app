@@ -1,10 +1,8 @@
 package prayerpoint
 
 import ( 
-  "context" 
   "errors" 
   "prayer-api/internal/domain/identity" 
-  domain "prayer-api/internal/domain/prayerpoint" 
 )
 
 var ( 
