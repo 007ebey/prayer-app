@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	groupdomain "prayer-api/internal/domain/prayergroup"
 	"prayer-api/internal/domain/identity"
 	pointdomain "prayer-api/internal/domain/prayerpoint"
 )
@@ -34,12 +33,6 @@ func TestService_Block(t *testing.T) {
 		return point
 	}
 
-	newGroup := func() *groupdomain.PrayerGroup {
-		return &groupdomain.PrayerGroup{
-			ID: groupID,
-		}
-	}
-
 	t.Run("blocks an active prayer point", func(t *testing.T) {
 		point := newPoint(t)
 
@@ -62,16 +55,6 @@ func TestService_Block(t *testing.T) {
 			},
 		}
 
-		groups := &mockPrayerGroupReader{
-			findByIDFn: func(
-				ctx context.Context,
-				id identity.PrayerGroupID,
-			) (*groupdomain.PrayerGroup, error) {
-				assert.Equal(t, groupID, id)
-				return newGroup(), nil
-			},
-		}
-
 		access := &mockUserAccessReader{
 			hasPrayerGroupFn: func(
 				ctx context.Context,
@@ -84,7 +67,11 @@ func TestService_Block(t *testing.T) {
 			},
 		}
 
-		service := NewService(repo, groups, access)
+		service := NewService(
+			repo,
+			&mockPrayerGroupReader{},
+			access,
+		)
 
 		err := service.Block(ctx, userID, pointID)
 
@@ -137,7 +124,7 @@ func TestService_Block(t *testing.T) {
 		err := service.Block(ctx, userID, pointID)
 
 		require.Error(t, err)
-		assert.ErrorIs(t, err, pointdomain.ErrNotFound)
+		assert.ErrorIs(t, err, ErrPrayerPointNotFound)
 	})
 
 	t.Run("returns repository error when update fails", func(t *testing.T) {
@@ -159,15 +146,6 @@ func TestService_Block(t *testing.T) {
 			},
 		}
 
-		groups := &mockPrayerGroupReader{
-			findByIDFn: func(
-				ctx context.Context,
-				id identity.PrayerGroupID,
-			) (*groupdomain.PrayerGroup, error) {
-				return newGroup(), nil
-			},
-		}
-
 		access := &mockUserAccessReader{
 			hasPrayerGroupFn: func(
 				ctx context.Context,
@@ -178,7 +156,11 @@ func TestService_Block(t *testing.T) {
 			},
 		}
 
-		service := NewService(repo, groups, access)
+		service := NewService(
+			repo,
+			&mockPrayerGroupReader{},
+			access,
+		)
 
 		err := service.Block(ctx, userID, pointID)
 
@@ -209,15 +191,6 @@ func TestService_Block(t *testing.T) {
 			},
 		}
 
-		groups := &mockPrayerGroupReader{
-			findByIDFn: func(
-				ctx context.Context,
-				id identity.PrayerGroupID,
-			) (*groupdomain.PrayerGroup, error) {
-				return newGroup(), nil
-			},
-		}
-
 		access := &mockUserAccessReader{
 			hasPrayerGroupFn: func(
 				ctx context.Context,
@@ -228,7 +201,11 @@ func TestService_Block(t *testing.T) {
 			},
 		}
 
-		service := NewService(repo, groups, access)
+		service := NewService(
+			repo,
+			&mockPrayerGroupReader{},
+			access,
+		)
 
 		err := service.Block(ctx, userID, pointID)
 

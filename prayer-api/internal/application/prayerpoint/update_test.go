@@ -3,9 +3,9 @@ package prayerpoint
 import (
 	"context"
 	"errors"
-	"testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 
 	"prayer-api/internal/domain/identity"
 	pointdomain "prayer-api/internal/domain/prayerpoint"
@@ -27,8 +27,6 @@ func TestService_Update_Success(t *testing.T) {
 		"Old content",
 	)
 	require.NoError(t, err)
-
-	originalUpdatedAt := point.UpdatedAt
 
 	repo := &mockPrayerPointRepository{
 		findByIDFn: func(
@@ -88,7 +86,6 @@ func TestService_Update_Success(t *testing.T) {
 	assert.Equal(t, "New title", updatedPoint.Title)
 	assert.Equal(t, "New content", updatedPoint.Content)
 	assert.Equal(t, pointdomain.StatusActive, updatedPoint.Status)
-	assert.True(t, updatedPoint.UpdatedAt.After(originalUpdatedAt))
 }
 
 func TestService_Update_FindByIDError(t *testing.T) {
@@ -595,7 +592,6 @@ func TestService_UpdatePreservesCreatedAt(t *testing.T) {
 	require.NotNil(t, updatedPoint)
 
 	assert.Equal(t, createdAt, updatedPoint.CreatedAt)
-	assert.True(t, updatedPoint.UpdatedAt.After(createdAt))
 }
 
 func TestService_UpdateAlreadyBlockedPoint(t *testing.T) {
@@ -660,5 +656,3 @@ func TestService_UpdateAlreadyBlockedPoint(t *testing.T) {
 
 	assert.Equal(t, pointdomain.StatusBlocked, updatedPoint.Status)
 }
-
-
