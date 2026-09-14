@@ -42,7 +42,7 @@ export const prayerApi = {
   health: () => apiClient.get('/api/health'),
 
   // Authentication
-  login: () => apiClient.post('/api/auth/login'),
+  login: (email: string) => apiClient.post('/api/auth/login', { email }),
 
   // User endpoints
   getProfile: (userId: string) => apiClient.get(`/api/users/${userId}`),

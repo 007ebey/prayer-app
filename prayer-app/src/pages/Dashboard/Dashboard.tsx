@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 
 import {
+    Button,
     Logo,
     Stack,
 } from "../../../primitives";
@@ -16,6 +17,7 @@ import NoActivePrayer from "../../NoActivePrayer";
 import UpcomingPrayers from "../../UpcomingPrayers";
 
 import PrayerWall from "../PrayerWall/PrayerWall";
+import { useClerk } from '@clerk/clerk-react';
 
 type DashboardPage =
     | "home"
@@ -26,6 +28,11 @@ const Dashboard = () => {
     // Temporary UI state.
     // Later this will come from session/backend state.
     const hasActivePrayer = true;
+    const { signOut } = useClerk();
+
+    const handleLogout = async () => {
+      await signOut();
+    };
 
     const [page, setPage] =
         useState<DashboardPage>("home");
@@ -70,8 +77,17 @@ const Dashboard = () => {
                             icon={<Church />}
                             name="Prayer App"
                         />
-
+                        
                         <ThemeSwitcher />
+
+                        <Button
+                            variant="outline"
+                            onClick={ async () =>
+                                await handleLogout()
+                            }
+                        >
+                            Logout
+                        </Button>
 
                     </div>
 

@@ -11,6 +11,10 @@ import (
 	domainid "prayer-api/internal/domain/identity"
 )
 
+type loginRequest struct {
+	Email string `json:"email"`
+}
+
 type AuthHandler struct {
 	login    *appauth.Service
 	identity identityauth.Provider
@@ -36,6 +40,22 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var req loginRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	  writeJSON(w, http.StatusBadRequest, map[string]any{
+		"error": "invalid request body",
+	  })
+	  return
+	}
+
+	if req.Email == "" {
+	  writeJSON(w, http.StatusBadRequest, map[string]any{
+		  "error": "email is required",
+	  })
+	  return
+    }
+
 	// Retrieve the identity associated with the Clerk subject.
 	externalIdentity, err := h.identity.GetIdentity(
 		r.Context(),
@@ -54,7 +74,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		appauth.LoginCommand{
 			ExternalID: externalIdentity.ExternalID,
 			Name:       externalIdentity.Name,
-			Email:      domainid.Email(externalIdentity.Email),
+			Email:      domainid.Email(req.Email),
 		},
 	)
 	if err != nil {

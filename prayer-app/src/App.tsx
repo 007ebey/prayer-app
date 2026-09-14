@@ -1,6 +1,5 @@
 import Login from "./pages/Login/Login";
 import Dashboard from "./pages/Dashboard/Dashboard";
-import AdminPage from "./pages/Admin/AdminPage";
 
 import {
   useState,
@@ -15,6 +14,7 @@ import {
 import type {
   LoginRole,
 } from "./pages/Login/Login.types";
+import { Container, Spinner } from "../primitives";
 
 const App = () => {
   const {
@@ -51,7 +51,11 @@ const App = () => {
    * Clerk is still loading the authentication state.
    */
   if (!isLoaded) {
-    return <div>Loading...</div>;
+    return <Container
+      className="flex items-center justify-center h-screen"
+    >   
+       <Spinner />
+    </Container>;
   }
 
   /*
