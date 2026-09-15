@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"strings"
 
 	"github.com/clerk/clerk-sdk-go/v2"
 	appauth "prayer-api/internal/application/auth"
@@ -49,7 +50,7 @@ func authenticatedRequest(externalID string) *http.Request {
 	req := httptest.NewRequest(
 		http.MethodPost,
 		"/api/auth/login",
-		nil,
+		strings.NewReader(`{"email":"anna@example.com"}`),
 	)
 
 	claims := &clerk.SessionClaims{
