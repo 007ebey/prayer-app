@@ -3,13 +3,15 @@ package prayersession
 import (
 	"context"
 	"strings"
+	"prayer-api/internal/domain/identity"
+	domain "prayer-api/internal/domain/prayersession"
 )
 
 func (s *Service) GetByID(
 	ctx context.Context,
 	actorID identity.UserID,
 	sessionID identity.PrayerSessionID,
-) (*PrayerSession, error) {
+) (*domain.PrayerSession, error) {
 	if strings.TrimSpace(sessionID.String()) == "" {
 		return nil, ErrInvalidID
 	}
@@ -22,13 +24,13 @@ func (s *Service) GetByID(
 	if session == nil {
 		return nil, ErrNotFound
 	}
+    
+	u, err := s.users.FindByExternalID(ctx, strings.TrimSpace(actorID.String())); if err != nil {
+		return nil, ErrUserNotFound
+	}
 
-	if err := s.requireGroupAccess(
-		ctx,
-		actorID,
-		session.PrayerGroupID,
-	); err != nil {
-		return nil, err
+	if !u.HasPrayerGroup(session.PrayerGroupID) {
+		return nil, ErrForbidden
 	}
 
 	return session, nil

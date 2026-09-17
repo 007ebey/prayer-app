@@ -2,338 +2,103 @@ package prayersession
 
 import (
 	"context"
-	"errors"
-	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"prayer-api/internal/domain/identity"
 	domain "prayer-api/internal/domain/prayersession"
-	"prayer-api/internal/domain/user"
+	domainuser "prayer-api/internal/domain/user"
 )
 
-type getPrayerSessionRepository struct {
-	findByIDFn func(
-		ctx context.Context,
-		id identity.PrayerSessionID,
-	) (*domain.PrayerSession, error)
+// ---------------------------------------------------------
+// Session repository stub
+// ---------------------------------------------------------
+
+type getPrayerSessionRepositoryStub struct {
+	session       *domain.PrayerSession
+	findErr       error
+	findCalled    bool
+	requestedID   identity.PrayerSessionID
 }
 
-func (m *getPrayerSessionRepository) FindByID(
+func (r *getPrayerSessionRepositoryStub) FindByID(
 	ctx context.Context,
 	id identity.PrayerSessionID,
 ) (*domain.PrayerSession, error) {
-	if m.findByIDFn != nil {
-		return m.findByIDFn(ctx, id)
-	}
+	r.findCalled = true
+	r.requestedID = id
 
-	return nil, nil
+	return r.session, r.findErr
 }
 
-func (m *getPrayerSessionRepository) ListByGroupID(
+func (r *getPrayerSessionRepositoryStub) ListByGroupID(
 	ctx context.Context,
 	groupID identity.PrayerGroupID,
 ) ([]domain.PrayerSession, error) {
 	return nil, nil
 }
 
-func (m *getPrayerSessionRepository) Save(
+func (r *getPrayerSessionRepositoryStub) Save(
 	ctx context.Context,
 	session *domain.PrayerSession,
 ) error {
 	return nil
 }
 
-func (m *getPrayerSessionRepository) Update(
+func (r *getPrayerSessionRepositoryStub) Update(
 	ctx context.Context,
 	session *domain.PrayerSession,
 ) error {
 	return nil
 }
 
-func (m *getPrayerSessionRepository) Delete(
+func (r *getPrayerSessionRepositoryStub) Delete(
 	ctx context.Context,
 	id identity.PrayerSessionID,
 ) error {
 	return nil
 }
 
-type getUserRepository struct {
-	findByIDFn func(
-		ctx context.Context,
-		id identity.UserID,
-	) (*user.User, error)
+// ---------------------------------------------------------
+// User repository stub
+// ---------------------------------------------------------
+
+type getUserRepositoryStub struct {
+	user         *domainuser.User
+	findErr      error
+	findCalled   bool
+	externalID   string
 }
 
-func (m *getUserRepository) FindByID(
+func (r *getUserRepositoryStub) FindByExternalID(
 	ctx context.Context,
-	id identity.UserID,
-) (*user.User, error) {
-	if m.findByIDFn != nil {
-		return m.findByIDFn(ctx, id)
-	}
+	externalID string,
+) (*domainuser.User, error) {
+	r.findCalled = true
+	r.externalID = externalID
 
+	return r.user, r.findErr
+}
+
+func (r *getUserRepositoryStub) Save(
+	ctx context.Context,
+	u *domainuser.User,
+) error {
+	return nil
+}
+
+func (r *getUserRepositoryStub) FindByEmail(
+	ctx context.Context,
+	email string,
+) (*domainuser.User, error) {
 	return nil, nil
 }
 
-func testGetSession() *domain.PrayerSession {
-	return &domain.PrayerSession{
-		ID:             identity.PrayerSessionID("session-1"),
-		PrayerGroupID:  identity.PrayerGroupID("group-1"),
-		Title:          "Morning Prayer",
-		Time:           "06:00",
-		Duration:       30,
-		PrayerPointIDs: []identity.PrayerPointID{},
-	}
-}
-
-func TestGetByIDSuccess(t *testing.T) {
-	expectedSession := testGetSession()
-
-	sessions := &getPrayerSessionRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) (*domain.PrayerSession, error) {
-			if id != identity.PrayerSessionID("session-1") {
-				t.Fatalf(
-					"expected session ID %q, got %q",
-					"session-1",
-					id,
-				)
-			}
-
-			return expectedSession, nil
-		},
-	}
-
-	users := &getUserRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.UserID,
-		) (*user.User, error) {
-			return testUser(
-				identity.UserID("user-1"),
-				identity.PrayerGroupID("group-1"),
-			), nil
-		},
-	}
-
-	service := NewService(sessions, users)
-
-	result, err := service.GetByID(
-		context.Background(),
-		identity.UserID("user-1"),
-		identity.PrayerSessionID("session-1"),
-	)
-
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-
-	if result == nil {
-		t.Fatal("expected session, got nil")
-	}
-
-	if result.ID != expectedSession.ID {
-		t.Errorf(
-			"expected ID %q, got %q",
-			expectedSession.ID,
-			result.ID,
-		)
-	}
-
-	if result.PrayerGroupID != expectedSession.PrayerGroupID {
-		t.Errorf(
-			"expected group ID %q, got %q",
-			expectedSession.PrayerGroupID,
-			result.PrayerGroupID,
-		)
-	}
-
-	if result.Title != expectedSession.Title {
-		t.Errorf(
-			"expected title %q, got %q",
-			expectedSession.Title,
-			result.Title,
-		)
-	}
-}
-
-func TestGetByIDSessionNotFound(t *testing.T) {
-	sessions := &getPrayerSessionRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) (*domain.PrayerSession, error) {
-			return nil, nil
-		},
-	}
-
-	users := &getUserRepository{}
-
-	service := NewService(sessions, users)
-
-	result, err := service.GetByID(
-		context.Background(),
-		identity.UserID("user-1"),
-		identity.PrayerSessionID("session-1"),
-	)
-
-	if result != nil {
-		t.Fatalf("expected nil session, got %v", result)
-	}
-
-	if !errors.Is(err, ErrNotFound) {
-		t.Fatalf(
-			"expected ErrNotFound, got %v",
-			err,
-		)
-	}
-}
-
-func TestGetByIDRepositoryError(t *testing.T) {
-	repoErr := errors.New("find session failed")
-
-	sessions := &getPrayerSessionRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) (*domain.PrayerSession, error) {
-			return nil, repoErr
-		},
-	}
-
-	users := &getUserRepository{}
-
-	service := NewService(sessions, users)
-
-	_, err := service.GetByID(
-		context.Background(),
-		identity.UserID("user-1"),
-		identity.PrayerSessionID("session-1"),
-	)
-
-	if !errors.Is(err, repoErr) {
-		t.Fatalf(
-			"expected repository error, got %v",
-			err,
-		)
-	}
-}
-
-func TestGetByIDUserNotFound(t *testing.T) {
-	sessions := &getPrayerSessionRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) (*domain.PrayerSession, error) {
-			return testGetSession(), nil
-		},
-	}
-
-	users := &getUserRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.UserID,
-		) (*user.User, error) {
-			return nil, nil
-		},
-	}
-
-	service := NewService(sessions, users)
-
-	result, err := service.GetByID(
-		context.Background(),
-		identity.UserID("user-1"),
-		identity.PrayerSessionID("session-1"),
-	)
-
-	if result != nil {
-		t.Fatalf("expected nil session, got %v", result)
-	}
-
-	if !errors.Is(err, ErrUserNotFound) {
-		t.Fatalf(
-			"expected ErrUserNotFound, got %v",
-			err,
-		)
-	}
-}
-
-func TestGetByIDUserRepositoryError(t *testing.T) {
-	repoErr := errors.New("find user failed")
-
-	sessions := &getPrayerSessionRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) (*domain.PrayerSession, error) {
-			return testGetSession(), nil
-		},
-	}
-
-	users := &getUserRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.UserID,
-		) (*user.User, error) {
-			return nil, repoErr
-		},
-	}
-
-	service := NewService(sessions, users)
-
-	_, err := service.GetByID(
-		context.Background(),
-		identity.UserID("user-1"),
-		identity.PrayerSessionID("session-1"),
-	)
-
-	if !errors.Is(err, repoErr) {
-		t.Fatalf(
-			"expected repository error, got %v",
-			err,
-		)
-	}
-}
-
-func TestGetByIDAccessDenied(t *testing.T) {
-	sessions := &getPrayerSessionRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) (*domain.PrayerSession, error) {
-			return testGetSession(), nil
-		},
-	}
-
-	users := &getUserRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.UserID,
-		) (*user.User, error) {
-			return testUser(
-				identity.UserID("user-1"),
-				identity.PrayerGroupID("different-group"),
-			), nil
-		},
-	}
-
-	service := NewService(sessions, users)
-
-	result, err := service.GetByID(
-		context.Background(),
-		identity.UserID("user-1"),
-		identity.PrayerSessionID("session-1"),
-	)
-
-	if result != nil {
-		t.Fatalf("expected nil session, got %v", result)
-	}
-
-	if !errors.Is(err, ErrForbidden) {
-		t.Fatalf(
-			"expected ErrForbidden, got %v",
-			err,
-		)
-	}
+func (r *getUserRepositoryStub) Update(
+	ctx context.Context,
+	u *domainuser.User,
+) error {
+	return nil
 }

@@ -6,431 +6,506 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"prayer-api/internal/domain/identity"
 	domain "prayer-api/internal/domain/prayersession"
-	"prayer-api/internal/domain/user"
+	domainuser "prayer-api/internal/domain/user"
 )
 
-type mockPrayerSessionRepository struct {
-	saveFn func(
-		ctx context.Context,
-		session *domain.PrayerSession,
-	) error
+type createPrayerSessionRepositoryStub struct {
+	savedSession *domain.PrayerSession
+	saveErr      error
 }
 
-func (m *mockPrayerSessionRepository) Save(
-	ctx context.Context,
-	session *domain.PrayerSession,
-) error {
-	if m.saveFn != nil {
-		return m.saveFn(ctx, session)
-	}
-
-	return nil
-}
-
-func (m *mockPrayerSessionRepository) FindByID(
+func (r *createPrayerSessionRepositoryStub) FindByID(
 	ctx context.Context,
 	id identity.PrayerSessionID,
 ) (*domain.PrayerSession, error) {
 	return nil, nil
 }
 
-func (m *mockPrayerSessionRepository) ListByGroupID(
+func (r *createPrayerSessionRepositoryStub) ListByGroupID(
 	ctx context.Context,
 	groupID identity.PrayerGroupID,
 ) ([]domain.PrayerSession, error) {
 	return nil, nil
 }
 
-func (m *mockPrayerSessionRepository) Update(
+func (r *createPrayerSessionRepositoryStub) Save(
+	ctx context.Context,
+	session *domain.PrayerSession,
+) error {
+	r.savedSession = session
+	return r.saveErr
+}
+
+func (r *createPrayerSessionRepositoryStub) Update(
 	ctx context.Context,
 	session *domain.PrayerSession,
 ) error {
 	return nil
 }
 
-func (m *mockPrayerSessionRepository) Delete(
+func (r *createPrayerSessionRepositoryStub) Delete(
 	ctx context.Context,
 	id identity.PrayerSessionID,
 ) error {
 	return nil
 }
 
-type mockUserRepository struct {
-	findByIDFn func(
-		ctx context.Context,
-		id identity.UserID,
-	) (*user.User, error)
+type createUserRepositoryStub struct {
+	user      *domainuser.User
+	findErr   error
+	externalID string
 }
 
-func (m *mockUserRepository) FindByID(
+func (r *createUserRepositoryStub) FindByExternalID(
 	ctx context.Context,
-	id identity.UserID,
-) (*user.User, error) {
-	if m.findByIDFn != nil {
-		return m.findByIDFn(ctx, id)
+	externalID string,
+) (*domainuser.User, error) {
+	r.externalID = externalID
+
+	if r.findErr != nil {
+		return nil, r.findErr
 	}
 
+	return r.user, nil
+}
+
+func (r *createUserRepositoryStub) Save(
+	ctx context.Context,
+	u *domainuser.User,
+) error {
+	return nil
+}
+
+func (r *createUserRepositoryStub) FindByEmail(
+	ctx context.Context,
+	email string,
+) (*domainuser.User, error) {
 	return nil, nil
 }
 
-func testUser(
-	userID identity.UserID,
-	groupID identity.PrayerGroupID,
-) *user.User {
-	return &user.User{
-		ID:             userID,
-		PrayerGroupIDs: []identity.PrayerGroupID{groupID},
-	}
+func (r *createUserRepositoryStub) Update(
+	ctx context.Context,
+	u *domainuser.User,
+) error {
+	return nil
 }
 
-func testCreateCommand() CreateCommand {
-	return CreateCommand{
-		ActorID:       identity.UserID("user-1"),
-		PrayerGroupID: identity.PrayerGroupID("group-1"),
-		Title:         "  Morning Prayer  ",
-		Date:          time.Date(2026, 9, 20, 0, 0, 0, 0, time.UTC),
-		Time:          " 06:00 ",
-		Duration:      30,
+func TestService_Create(t *testing.T) {
+	t.Parallel()
+
+	validActorID := identity.UserID("user-1")
+	validGroupID := identity.PrayerGroupID("group-1")
+	validDate := time.Date(
+		2026,
+		9,
+		18,
+		0,
+		0,
+		0,
+		0,
+		time.UTC,
+	)
+
+	validCommand := CreateCommand{
+		ActorID:       validActorID,
+		PrayerGroupID: validGroupID,
+		Title:         "Morning Prayer",
+		Date:          validDate,
+		Time:          "07:00",
+		Duration:      60,
 		PrayerPointIDs: []identity.PrayerPointID{
-			identity.PrayerPointID("point-1"),
-			identity.PrayerPointID("point-2"),
-		},
-	}
-}
-
-func TestCreateSuccess(t *testing.T) {
-	var savedSession *domain.PrayerSession
-
-	sessions := &mockPrayerSessionRepository{
-		saveFn: func(
-			ctx context.Context,
-			session *domain.PrayerSession,
-		) error {
-			savedSession = session
-			return nil
+			"point-1",
+			"point-2",
 		},
 	}
 
-	users := &mockUserRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.UserID,
-		) (*user.User, error) {
-			return testUser(
-				identity.UserID("user-1"),
-				identity.PrayerGroupID("group-1"),
-			), nil
-		},
-	}
+	t.Run("creates a prayer session successfully", func(t *testing.T) {
+		t.Parallel()
 
-	service := NewService(sessions, users)
+		user := &domainuser.User{
+			ID:             validActorID,
+			PrayerGroupIDs: []identity.PrayerGroupID{validGroupID},
+		}
 
-	result, err := service.Create(
-		context.Background(),
-		testCreateCommand(),
-	)
+		userRepo := &createUserRepositoryStub{
+			user: user,
+		}
 
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
+		sessionRepo := &createPrayerSessionRepositoryStub{}
 
-	if result == nil {
-		t.Fatal("expected session, got nil")
-	}
+		service := &Service{
+			users:    userRepo,
+			sessions: sessionRepo,
+		}
 
-	if savedSession == nil {
-		t.Fatal("expected session to be saved")
-	}
-
-	if savedSession.ID != identity.PrayerSessionID("session-generated") {
-		t.Errorf(
-			"expected ID %q, got %q",
-			"session-generated",
-			savedSession.ID,
+		session, err := service.Create(
+			context.Background(),
+			validCommand,
 		)
-	}
 
-	if savedSession.PrayerGroupID != identity.PrayerGroupID("group-1") {
-		t.Errorf(
-			"expected group ID %q, got %q",
-			"group-1",
-			savedSession.PrayerGroupID,
+		require.NoError(t, err)
+		require.NotNil(t, session)
+
+		assert.Equal(t, validGroupID, session.PrayerGroupID)
+		assert.Equal(t, "Morning Prayer", session.Title)
+		assert.Equal(t, validDate, session.Date)
+		assert.Equal(t, "07:00", session.Time)
+		assert.Equal(t, 60, session.Duration)
+		assert.Equal(
+			t,
+			validCommand.PrayerPointIDs,
+			session.PrayerPointIDs,
 		)
-	}
 
-	if savedSession.Title != "Morning Prayer" {
-		t.Errorf(
-			"expected trimmed title %q, got %q",
-			"Morning Prayer",
-			savedSession.Title,
+		require.NotNil(t, sessionRepo.savedSession)
+		assert.Equal(
+			t,
+			session,
+			sessionRepo.savedSession,
 		)
-	}
+	})
 
-	if savedSession.Time != "06:00" {
-		t.Errorf(
-			"expected trimmed time %q, got %q",
-			"06:00",
-			savedSession.Time,
+	t.Run("requires prayer group ID", func(t *testing.T) {
+		t.Parallel()
+
+		cmd := validCommand
+		cmd.PrayerGroupID = ""
+
+		service := &Service{}
+
+		session, err := service.Create(
+			context.Background(),
+			cmd,
 		)
-	}
 
-	if savedSession.Duration != 30 {
-		t.Errorf(
-			"expected duration 30, got %d",
-			savedSession.Duration,
+		assert.Nil(t, session)
+		assert.ErrorIs(t, err, ErrInvalidGroupID)
+	})
+
+	t.Run("requires title", func(t *testing.T) {
+		t.Parallel()
+
+		cmd := validCommand
+		cmd.Title = ""
+
+		service := &Service{}
+
+		session, err := service.Create(
+			context.Background(),
+			cmd,
 		)
-	}
 
-	if len(savedSession.PrayerPointIDs) != 2 {
-		t.Fatalf(
-			"expected 2 prayer points, got %d",
-			len(savedSession.PrayerPointIDs),
+		assert.Nil(t, session)
+		assert.ErrorIs(t, err, ErrTitleRequired)
+	})
+
+	t.Run("rejects whitespace-only title", func(t *testing.T) {
+		t.Parallel()
+
+		cmd := validCommand
+		cmd.Title = "   "
+
+		service := &Service{}
+
+		session, err := service.Create(
+			context.Background(),
+			cmd,
 		)
-	}
-}
 
-func TestCreateInvalidGroupID(t *testing.T) {
-	cmd := testCreateCommand()
-	cmd.PrayerGroupID = ""
+		assert.Nil(t, session)
+		assert.ErrorIs(t, err, ErrTitleRequired)
+	})
 
-	service := NewService(
-		&mockPrayerSessionRepository{},
-		&mockUserRepository{},
-	)
+	t.Run("requires date", func(t *testing.T) {
+		t.Parallel()
 
-	_, err := service.Create(context.Background(), cmd)
+		cmd := validCommand
+		cmd.Date = time.Time{}
 
-	if !errors.Is(err, ErrInvalidGroupID) {
-		t.Fatalf(
-			"expected ErrInvalidGroupID, got %v",
-			err,
+		service := &Service{}
+
+		session, err := service.Create(
+			context.Background(),
+			cmd,
 		)
-	}
-}
 
-func TestCreateTitleRequired(t *testing.T) {
-	cmd := testCreateCommand()
-	cmd.Title = "   "
+		assert.Nil(t, session)
+		assert.ErrorIs(t, err, ErrInvalidDate)
+	})
 
-	service := NewService(
-		&mockPrayerSessionRepository{},
-		&mockUserRepository{},
-	)
+	t.Run("requires time", func(t *testing.T) {
+		t.Parallel()
 
-	_, err := service.Create(context.Background(), cmd)
+		cmd := validCommand
+		cmd.Time = ""
 
-	if !errors.Is(err, ErrTitleRequired) {
-		t.Fatalf(
-			"expected ErrTitleRequired, got %v",
-			err,
+		service := &Service{}
+
+		session, err := service.Create(
+			context.Background(),
+			cmd,
 		)
-	}
-}
 
-func TestCreateInvalidDate(t *testing.T) {
-	cmd := testCreateCommand()
-	cmd.Date = time.Time{}
+		assert.Nil(t, session)
+		assert.ErrorIs(t, err, ErrTimeRequired)
+	})
 
-	service := NewService(
-		&mockPrayerSessionRepository{},
-		&mockUserRepository{},
-	)
+	t.Run("rejects whitespace-only time", func(t *testing.T) {
+		t.Parallel()
 
-	_, err := service.Create(context.Background(), cmd)
+		cmd := validCommand
+		cmd.Time = "   "
 
-	if !errors.Is(err, ErrInvalidDate) {
-		t.Fatalf(
-			"expected ErrInvalidDate, got %v",
-			err,
+		service := &Service{}
+
+		session, err := service.Create(
+			context.Background(),
+			cmd,
 		)
-	}
-}
 
-func TestCreateTimeRequired(t *testing.T) {
-	cmd := testCreateCommand()
-	cmd.Time = "   "
+		assert.Nil(t, session)
+		assert.ErrorIs(t, err, ErrTimeRequired)
+	})
 
-	service := NewService(
-		&mockPrayerSessionRepository{},
-		&mockUserRepository{},
-	)
+	t.Run("requires positive duration", func(t *testing.T) {
+		t.Parallel()
 
-	_, err := service.Create(context.Background(), cmd)
+		cmd := validCommand
+		cmd.Duration = 0
 
-	if !errors.Is(err, ErrTimeRequired) {
-		t.Fatalf(
-			"expected ErrTimeRequired, got %v",
-			err,
+		service := &Service{}
+
+		session, err := service.Create(
+			context.Background(),
+			cmd,
 		)
-	}
-}
 
-func TestCreateInvalidDuration(t *testing.T) {
-	testCases := []struct {
-		name     string
-		duration int
-	}{
-		{
-			name:     "zero duration",
-			duration: 0,
-		},
-		{
-			name:     "negative duration",
-			duration: -10,
-		},
-	}
+		assert.Nil(t, session)
+		assert.ErrorIs(t, err, ErrInvalidDuration)
+	})
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			cmd := testCreateCommand()
-			cmd.Duration = tc.duration
+	t.Run("rejects negative duration", func(t *testing.T) {
+		t.Parallel()
 
-			service := NewService(
-				&mockPrayerSessionRepository{},
-				&mockUserRepository{},
-			)
+		cmd := validCommand
+		cmd.Duration = -10
 
-			_, err := service.Create(
-				context.Background(),
-				cmd,
-			)
+		service := &Service{}
 
-			if !errors.Is(err, ErrInvalidDuration) {
-				t.Fatalf(
-					"expected ErrInvalidDuration, got %v",
-					err,
-				)
-			}
-		})
-	}
-}
-
-func TestCreateUserNotFound(t *testing.T) {
-	users := &mockUserRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.UserID,
-		) (*user.User, error) {
-			return nil, nil
-		},
-	}
-
-	service := NewService(
-		&mockPrayerSessionRepository{},
-		users,
-	)
-
-	_, err := service.Create(
-		context.Background(),
-		testCreateCommand(),
-	)
-
-	if !errors.Is(err, ErrUserNotFound) {
-		t.Fatalf(
-			"expected ErrUserNotFound, got %v",
-			err,
+		session, err := service.Create(
+			context.Background(),
+			cmd,
 		)
-	}
-}
 
-func TestCreateUserRepositoryError(t *testing.T) {
-	repoErr := errors.New("user repository failed")
+		assert.Nil(t, session)
+		assert.ErrorIs(t, err, ErrInvalidDuration)
+	})
 
-	users := &mockUserRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.UserID,
-		) (*user.User, error) {
-			return nil, repoErr
-		},
-	}
+	t.Run("returns unknown when user lookup fails", func(t *testing.T) {
+		t.Parallel()
 
-	service := NewService(
-		&mockPrayerSessionRepository{},
-		users,
-	)
+		userRepo := &createUserRepositoryStub{
+			findErr: errors.New("database failure"),
+		}
 
-	_, err := service.Create(
-		context.Background(),
-		testCreateCommand(),
-	)
+		sessionRepo := &createPrayerSessionRepositoryStub{}
 
-	if !errors.Is(err, repoErr) {
-		t.Fatalf(
-			"expected repository error, got %v",
-			err,
+		service := &Service{
+			users:    userRepo,
+			sessions: sessionRepo,
+		}
+
+		session, err := service.Create(
+			context.Background(),
+			validCommand,
 		)
-	}
-}
 
-func TestCreateAccessDenied(t *testing.T) {
-	users := &mockUserRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.UserID,
-		) (*user.User, error) {
-			return testUser(
-				identity.UserID("user-1"),
+		assert.Nil(t, session)
+		assert.ErrorIs(t, err, ErrUnknown)
+	})
+
+	t.Run("returns user not found when user does not exist", func(t *testing.T) {
+		t.Parallel()
+
+		userRepo := &createUserRepositoryStub{
+			user: nil,
+		}
+
+		sessionRepo := &createPrayerSessionRepositoryStub{}
+
+		service := &Service{
+			users:    userRepo,
+			sessions: sessionRepo,
+		}
+
+		session, err := service.Create(
+			context.Background(),
+			validCommand,
+		)
+
+		assert.Nil(t, session)
+		assert.ErrorIs(t, err, ErrUserNotFound)
+	})
+
+	t.Run("returns forbidden when user has no group access", func(t *testing.T) {
+		t.Parallel()
+
+		user := &domainuser.User{
+			ID:             validActorID,
+			PrayerGroupIDs: []identity.PrayerGroupID{
 				identity.PrayerGroupID("different-group"),
-			), nil
-		},
-	}
+			},
+		}
 
-	service := NewService(
-		&mockPrayerSessionRepository{},
-		users,
-	)
+		userRepo := &createUserRepositoryStub{
+			user: user,
+		}
 
-	_, err := service.Create(
-		context.Background(),
-		testCreateCommand(),
-	)
+		sessionRepo := &createPrayerSessionRepositoryStub{}
 
-	if !errors.Is(err, ErrForbidden) {
-		t.Fatalf(
-			"expected ErrForbidden, got %v",
-			err,
+		service := &Service{
+			users:    userRepo,
+			sessions: sessionRepo,
+		}
+
+		session, err := service.Create(
+			context.Background(),
+			validCommand,
 		)
-	}
-}
 
-func TestCreateRepositoryError(t *testing.T) {
-	repoErr := errors.New("save failed")
+		assert.Nil(t, session)
+		assert.ErrorIs(t, err, ErrForbidden)
+	})
 
-	sessions := &mockPrayerSessionRepository{
-		saveFn: func(
-			ctx context.Context,
-			session *domain.PrayerSession,
-		) error {
-			return repoErr
-		},
-	}
+	t.Run("trims title before creating session", func(t *testing.T) {
+		t.Parallel()
 
-	users := &mockUserRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.UserID,
-		) (*user.User, error) {
-			return testUser(
-				identity.UserID("user-1"),
-				identity.PrayerGroupID("group-1"),
-			), nil
-		},
-	}
+		user := &domainuser.User{
+			ID:             validActorID,
+			PrayerGroupIDs: []identity.PrayerGroupID{validGroupID},
+		}
 
-	service := NewService(sessions, users)
+		userRepo := &createUserRepositoryStub{
+			user: user,
+		}
 
-	_, err := service.Create(
-		context.Background(),
-		testCreateCommand(),
-	)
+		sessionRepo := &createPrayerSessionRepositoryStub{}
 
-	if !errors.Is(err, repoErr) {
-		t.Fatalf(
-			"expected repository error, got %v",
-			err,
+		service := &Service{
+			users:    userRepo,
+			sessions: sessionRepo,
+		}
+
+		cmd := validCommand
+		cmd.Title = "  Morning Prayer  "
+
+		session, err := service.Create(
+			context.Background(),
+			cmd,
 		)
-	}
+
+		require.NoError(t, err)
+		require.NotNil(t, session)
+
+		assert.Equal(t, "Morning Prayer", session.Title)
+	})
+
+	t.Run("trims time before creating session", func(t *testing.T) {
+		t.Parallel()
+
+		user := &domainuser.User{
+			ID:             validActorID,
+			PrayerGroupIDs: []identity.PrayerGroupID{validGroupID},
+		}
+
+		userRepo := &createUserRepositoryStub{
+			user: user,
+		}
+
+		sessionRepo := &createPrayerSessionRepositoryStub{}
+
+		service := &Service{
+			users:    userRepo,
+			sessions: sessionRepo,
+		}
+
+		cmd := validCommand
+		cmd.Time = "  07:00  "
+
+		session, err := service.Create(
+			context.Background(),
+			cmd,
+		)
+
+		require.NoError(t, err)
+		require.NotNil(t, session)
+
+		assert.Equal(t, "07:00", session.Time)
+	})
+
+	t.Run("passes actor ID as external ID to user repository", func(t *testing.T) {
+		t.Parallel()
+
+		user := &domainuser.User{
+			ID:             validActorID,
+			PrayerGroupIDs: []identity.PrayerGroupID{validGroupID},
+		}
+
+		userRepo := &createUserRepositoryStub{
+			user: user,
+		}
+
+		service := &Service{
+			users:    userRepo,
+			sessions: &createPrayerSessionRepositoryStub{},
+		}
+
+		cmd := validCommand
+		cmd.ActorID = identity.UserID("  external-user-1  ")
+
+		_, err := service.Create(
+			context.Background(),
+			cmd,
+		)
+
+		require.NoError(t, err)
+		assert.Equal(t, "external-user-1", userRepo.externalID)
+	})
+
+	t.Run("returns repository error when save fails", func(t *testing.T) {
+		t.Parallel()
+
+		user := &domainuser.User{
+			ID:             validActorID,
+			PrayerGroupIDs: []identity.PrayerGroupID{validGroupID},
+		}
+
+		userRepo := &createUserRepositoryStub{
+			user: user,
+		}
+
+		saveErr := errors.New("save failed")
+
+		sessionRepo := &createPrayerSessionRepositoryStub{
+			saveErr: saveErr,
+		}
+
+		service := &Service{
+			users:    userRepo,
+			sessions: sessionRepo,
+		}
+
+		session, err := service.Create(
+			context.Background(),
+			validCommand,
+		)
+
+		assert.Nil(t, session)
+		assert.ErrorIs(t, err, saveErr)
+	})
 }

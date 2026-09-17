@@ -4,6 +4,8 @@ import
 (
   domainuser "prayer-api/internal/domain/user"
   domain "prayer-api/internal/domain/prayersession"
+  "context"
+  "prayer-api/internal/domain/identity"
 )
 
 func (s *Service) ListForUser(
@@ -12,7 +14,7 @@ func (s *Service) ListForUser(
 ) ([]domain.PrayerSession, error) {
 
 	// 1. Find the user.
-	u, err := s.users.FindByID(ctx, userID)
+	u, err := s.users.FindByExternalID(ctx, userID.String())
 	if err != nil {
 		return nil, err
 	}

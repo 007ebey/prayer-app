@@ -5,367 +5,347 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"prayer-api/internal/domain/identity"
 	domain "prayer-api/internal/domain/prayersession"
-	"prayer-api/internal/domain/user"
+	domainuser "prayer-api/internal/domain/user"
 )
 
-type deletePrayerSessionRepository struct {
-	findByIDFn func(
-		ctx context.Context,
-		id identity.PrayerSessionID,
-	) (*domain.PrayerSession, error)
-
-	deleteFn func(
-		ctx context.Context,
-		id identity.PrayerSessionID,
-	) error
+type deletePrayerSessionRepositoryStub struct {
+	session    *domain.PrayerSession
+	findErr    error
+	deleteErr  error
+	deletedID  identity.PrayerSessionID
+	deleteCall bool
 }
 
-func (m *deletePrayerSessionRepository) FindByID(
+func (r *deletePrayerSessionRepositoryStub) FindByID(
 	ctx context.Context,
 	id identity.PrayerSessionID,
 ) (*domain.PrayerSession, error) {
-	if m.findByIDFn != nil {
-		return m.findByIDFn(ctx, id)
+	if r.findErr != nil {
+		return nil, r.findErr
 	}
 
-	return nil, nil
+	return r.session, nil
 }
 
-func (m *deletePrayerSessionRepository) ListByGroupID(
+func (r *deletePrayerSessionRepositoryStub) ListByGroupID(
 	ctx context.Context,
 	groupID identity.PrayerGroupID,
 ) ([]domain.PrayerSession, error) {
 	return nil, nil
 }
 
-func (m *deletePrayerSessionRepository) Save(
+func (r *deletePrayerSessionRepositoryStub) Save(
 	ctx context.Context,
 	session *domain.PrayerSession,
 ) error {
 	return nil
 }
 
-func (m *deletePrayerSessionRepository) Update(
+func (r *deletePrayerSessionRepositoryStub) Update(
 	ctx context.Context,
 	session *domain.PrayerSession,
 ) error {
 	return nil
 }
 
-func (m *deletePrayerSessionRepository) Delete(
+func (r *deletePrayerSessionRepositoryStub) Delete(
 	ctx context.Context,
 	id identity.PrayerSessionID,
 ) error {
-	if m.deleteFn != nil {
-		return m.deleteFn(ctx, id)
+	r.deleteCall = true
+	r.deletedID = id
+
+	return r.deleteErr
+}
+
+type deleteUserRepositoryStub struct {
+	user       *domainuser.User
+	findErr    error
+	externalID string
+}
+
+func (r *deleteUserRepositoryStub) FindByExternalID(
+	ctx context.Context,
+	externalID string,
+) (*domainuser.User, error) {
+	r.externalID = externalID
+
+	if r.findErr != nil {
+		return nil, r.findErr
 	}
 
+	return r.user, nil
+}
+
+func (r *deleteUserRepositoryStub) Save(
+	ctx context.Context,
+	u *domainuser.User,
+) error {
 	return nil
 }
 
-type deleteUserRepository struct {
-	findByIDFn func(
-		ctx context.Context,
-		id identity.UserID,
-	) (*user.User, error)
-}
-
-func (m *deleteUserRepository) FindByID(
+func (r *deleteUserRepositoryStub) FindByEmail(
 	ctx context.Context,
-	id identity.UserID,
-) (*user.User, error) {
-	if m.findByIDFn != nil {
-		return m.findByIDFn(ctx, id)
-	}
-
+	email string,
+) (*domainuser.User, error) {
 	return nil, nil
 }
 
-func testSession() *domain.PrayerSession {
-	return &domain.PrayerSession{
-		ID:            identity.PrayerSessionID("session-1"),
-		PrayerGroupID: identity.PrayerGroupID("group-1"),
+func (r *deleteUserRepositoryStub) Update(
+	ctx context.Context,
+	u *domainuser.User,
+) error {
+	return nil
+}
+
+func TestService_Delete(t *testing.T) {
+	t.Parallel()
+
+	sessionID := identity.PrayerSessionID("session-1")
+	groupID := identity.PrayerGroupID("group-1")
+	userID := identity.UserID("user-1")
+
+	session := &domain.PrayerSession{
+		ID:            sessionID,
+		PrayerGroupID: groupID,
 		Title:         "Morning Prayer",
 	}
-}
 
-func TestDeleteSuccess(t *testing.T) {
-	var deletedID identity.PrayerSessionID
+	t.Run("deletes prayer session when user has access", func(t *testing.T) {
+		t.Parallel()
 
-	sessions := &deletePrayerSessionRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) (*domain.PrayerSession, error) {
-			return testSession(), nil
-		},
-		deleteFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) error {
-			deletedID = id
-			return nil
-		},
-	}
+		user := &domainuser.User{
+			ID:             userID,
+			PrayerGroupIDs: []identity.PrayerGroupID{groupID},
+		}
 
-	users := &deleteUserRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.UserID,
-		) (*user.User, error) {
-			return testUser(
-				identity.UserID("user-1"),
-				identity.PrayerGroupID("group-1"),
-			), nil
-		},
-	}
+		sessionRepo := &deletePrayerSessionRepositoryStub{
+			session: session,
+		}
 
-	service := NewService(sessions, users)
+		userRepo := &deleteUserRepositoryStub{
+			user: user,
+		}
 
-	err := service.Delete(
-		context.Background(),
-		identity.UserID("user-1"),
-		identity.PrayerSessionID("session-1"),
-	)
+		service := &Service{
+			sessions: sessionRepo,
+			users:    userRepo,
+		}
 
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-
-	if deletedID != identity.PrayerSessionID("session-1") {
-		t.Fatalf(
-			"expected session %q to be deleted, got %q",
-			"session-1",
-			deletedID,
+		err := service.Delete(
+			context.Background(),
+			userID,
+			sessionID,
 		)
-	}
-}
 
-func TestDeleteSessionNotFound(t *testing.T) {
-	sessions := &deletePrayerSessionRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) (*domain.PrayerSession, error) {
-			return nil, nil
-		},
-	}
+		require.NoError(t, err)
 
-	users := &deleteUserRepository{}
+		assert.True(t, sessionRepo.deleteCall)
+		assert.Equal(t, sessionID, sessionRepo.deletedID)
+		assert.Equal(t, "user-1", userRepo.externalID)
+	})
 
-	service := NewService(sessions, users)
+	t.Run("returns repository error when finding session fails", func(t *testing.T) {
+		t.Parallel()
 
-	err := service.Delete(
-		context.Background(),
-		identity.UserID("user-1"),
-		identity.PrayerSessionID("session-1"),
-	)
+		findErr := errors.New("find session failed")
 
-	if !errors.Is(err, ErrNotFound) {
-		t.Fatalf(
-			"expected ErrNotFound, got %v",
-			err,
+		sessionRepo := &deletePrayerSessionRepositoryStub{
+			findErr: findErr,
+		}
+
+		service := &Service{
+			sessions: sessionRepo,
+			users:    &deleteUserRepositoryStub{},
+		}
+
+		err := service.Delete(
+			context.Background(),
+			userID,
+			sessionID,
 		)
-	}
-}
 
-func TestDeleteFindSessionRepositoryError(t *testing.T) {
-	repoErr := errors.New("find session failed")
+		assert.ErrorIs(t, err, findErr)
+		assert.False(t, sessionRepo.deleteCall)
+	})
 
-	sessions := &deletePrayerSessionRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) (*domain.PrayerSession, error) {
-			return nil, repoErr
-		},
-	}
+	t.Run("returns not found when session does not exist", func(t *testing.T) {
+		t.Parallel()
 
-	users := &deleteUserRepository{}
+		sessionRepo := &deletePrayerSessionRepositoryStub{
+			session: nil,
+		}
 
-	service := NewService(sessions, users)
+		service := &Service{
+			sessions: sessionRepo,
+			users:    &deleteUserRepositoryStub{},
+		}
 
-	err := service.Delete(
-		context.Background(),
-		identity.UserID("user-1"),
-		identity.PrayerSessionID("session-1"),
-	)
-
-	if !errors.Is(err, repoErr) {
-		t.Fatalf(
-			"expected repository error, got %v",
-			err,
+		err := service.Delete(
+			context.Background(),
+			userID,
+			sessionID,
 		)
-	}
-}
 
-func TestDeleteUserNotFound(t *testing.T) {
-	sessions := &deletePrayerSessionRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) (*domain.PrayerSession, error) {
-			return testSession(), nil
-		},
-	}
+		assert.ErrorIs(t, err, ErrNotFound)
+		assert.False(t, sessionRepo.deleteCall)
+	})
 
-	users := &deleteUserRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.UserID,
-		) (*user.User, error) {
-			return nil, nil
-		},
-	}
+	t.Run("returns error when finding user fails", func(t *testing.T) {
+		t.Parallel()
 
-	service := NewService(sessions, users)
+		findErr := errors.New("find user failed")
 
-	err := service.Delete(
-		context.Background(),
-		identity.UserID("user-1"),
-		identity.PrayerSessionID("session-1"),
-	)
+		sessionRepo := &deletePrayerSessionRepositoryStub{
+			session: session,
+		}
 
-	if !errors.Is(err, ErrUserNotFound) {
-		t.Fatalf(
-			"expected ErrUserNotFound, got %v",
-			err,
+		userRepo := &deleteUserRepositoryStub{
+			findErr: findErr,
+		}
+
+		service := &Service{
+			sessions: sessionRepo,
+			users:    userRepo,
+		}
+
+		err := service.Delete(
+			context.Background(),
+			userID,
+			sessionID,
 		)
-	}
-}
 
-func TestDeleteUserRepositoryError(t *testing.T) {
-	repoErr := errors.New("find user failed")
+		assert.ErrorIs(t, err, findErr)
+		assert.False(t, sessionRepo.deleteCall)
+	})
 
-	sessions := &deletePrayerSessionRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) (*domain.PrayerSession, error) {
-			return testSession(), nil
-		},
-	}
+	t.Run("returns user not found when user does not exist", func(t *testing.T) {
+		t.Parallel()
 
-	users := &deleteUserRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.UserID,
-		) (*user.User, error) {
-			return nil, repoErr
-		},
-	}
+		sessionRepo := &deletePrayerSessionRepositoryStub{
+			session: session,
+		}
 
-	service := NewService(sessions, users)
+		userRepo := &deleteUserRepositoryStub{
+			user: nil,
+		}
 
-	err := service.Delete(
-		context.Background(),
-		identity.UserID("user-1"),
-		identity.PrayerSessionID("session-1"),
-	)
+		service := &Service{
+			sessions: sessionRepo,
+			users:    userRepo,
+		}
 
-	if !errors.Is(err, repoErr) {
-		t.Fatalf(
-			"expected repository error, got %v",
-			err,
+		err := service.Delete(
+			context.Background(),
+			userID,
+			sessionID,
 		)
-	}
-}
 
-func TestDeleteAccessDenied(t *testing.T) {
-	deleteCalled := false
+		assert.ErrorIs(t, err, ErrUserNotFound)
+		assert.False(t, sessionRepo.deleteCall)
+	})
 
-	sessions := &deletePrayerSessionRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) (*domain.PrayerSession, error) {
-			return testSession(), nil
-		},
-		deleteFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) error {
-			deleteCalled = true
-			return nil
-		},
-	}
+	t.Run("returns forbidden when user has no group access", func(t *testing.T) {
+		t.Parallel()
 
-	users := &deleteUserRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.UserID,
-		) (*user.User, error) {
-			return testUser(
-				identity.UserID("user-1"),
+		user := &domainuser.User{
+			ID: userID,
+			PrayerGroupIDs: []identity.PrayerGroupID{
 				identity.PrayerGroupID("different-group"),
-			), nil
-		},
-	}
+			},
+		}
 
-	service := NewService(sessions, users)
+		sessionRepo := &deletePrayerSessionRepositoryStub{
+			session: session,
+		}
 
-	err := service.Delete(
-		context.Background(),
-		identity.UserID("user-1"),
-		identity.PrayerSessionID("session-1"),
-	)
+		userRepo := &deleteUserRepositoryStub{
+			user: user,
+		}
 
-	if !errors.Is(err, ErrForbidden) {
-		t.Fatalf(
-			"expected ErrForbidden, got %v",
-			err,
+		service := &Service{
+			sessions: sessionRepo,
+			users:    userRepo,
+		}
+
+		err := service.Delete(
+			context.Background(),
+			userID,
+			sessionID,
 		)
-	}
 
-	if deleteCalled {
-		t.Fatal("expected Delete not to be called when access is denied")
-	}
-}
+		assert.ErrorIs(t, err, ErrForbidden)
+		assert.False(t, sessionRepo.deleteCall)
+	})
 
-func TestDeleteRepositoryError(t *testing.T) {
-	repoErr := errors.New("delete failed")
+	t.Run("returns error when deleting session fails", func(t *testing.T) {
+		t.Parallel()
 
-	sessions := &deletePrayerSessionRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) (*domain.PrayerSession, error) {
-			return testSession(), nil
-		},
-		deleteFn: func(
-			ctx context.Context,
-			id identity.PrayerSessionID,
-		) error {
-			return repoErr
-		},
-	}
+		deleteErr := errors.New("delete session failed")
 
-	users := &deleteUserRepository{
-		findByIDFn: func(
-			ctx context.Context,
-			id identity.UserID,
-		) (*user.User, error) {
-			return testUser(
-				identity.UserID("user-1"),
-				identity.PrayerGroupID("group-1"),
-			), nil
-		},
-	}
+		user := &domainuser.User{
+			ID:             userID,
+			PrayerGroupIDs: []identity.PrayerGroupID{groupID},
+		}
 
-	service := NewService(sessions, users)
+		sessionRepo := &deletePrayerSessionRepositoryStub{
+			session:   session,
+			deleteErr: deleteErr,
+		}
 
-	err := service.Delete(
-		context.Background(),
-		identity.UserID("user-1"),
-		identity.PrayerSessionID("session-1"),
-	)
+		userRepo := &deleteUserRepositoryStub{
+			user: user,
+		}
 
-	if !errors.Is(err, repoErr) {
-		t.Fatalf(
-			"expected repository error, got %v",
-			err,
+		service := &Service{
+			sessions: sessionRepo,
+			users:    userRepo,
+		}
+
+		err := service.Delete(
+			context.Background(),
+			userID,
+			sessionID,
 		)
-	}
+
+		assert.ErrorIs(t, err, deleteErr)
+		assert.True(t, sessionRepo.deleteCall)
+		assert.Equal(t, sessionID, sessionRepo.deletedID)
+	})
+
+	t.Run("trims external user ID before lookup", func(t *testing.T) {
+		t.Parallel()
+
+		user := &domainuser.User{
+			ID:             userID,
+			PrayerGroupIDs: []identity.PrayerGroupID{groupID},
+		}
+
+		sessionRepo := &deletePrayerSessionRepositoryStub{
+			session: session,
+		}
+
+		userRepo := &deleteUserRepositoryStub{
+			user: user,
+		}
+
+		service := &Service{
+			sessions: sessionRepo,
+			users:    userRepo,
+		}
+
+		err := service.Delete(
+			context.Background(),
+			identity.UserID("  user-1  "),
+			sessionID,
+		)
+
+		require.NoError(t, err)
+		assert.Equal(t, "user-1", userRepo.externalID)
+	})
 }

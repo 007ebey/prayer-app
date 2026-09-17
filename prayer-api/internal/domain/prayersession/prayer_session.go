@@ -30,6 +30,7 @@ func New(
 	title string,
 	date time.Time,
 	sessionTime string,
+	duration int,
 	prayerPointIDs []identity.PrayerPointID,
 ) (*PrayerSession, error) {
 	if strings.TrimSpace(id.String()) == "" {
@@ -48,13 +49,17 @@ func New(
 		return nil, ErrInvalidDate
 	}
 
+	if duration <= 0 {
+		return nil, ErrInvalidDuration
+	}
+
 	return &PrayerSession{
 		ID:             id,
 		PrayerGroupID:  prayerGroupID,
-		Title:          strings.TrimSpace(title),
+		Title:         strings.TrimSpace(title),
 		Date:           date,
 		Time:           strings.TrimSpace(sessionTime),
-		Duration:       0, // Initialize duration to 0
+		Duration:       duration,
 		PrayerPointIDs: append([]identity.PrayerPointID(nil), prayerPointIDs...),
 	}, nil
 }

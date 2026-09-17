@@ -3,6 +3,7 @@ package prayersession
 import (
 	"context"
 	"strings"
+	"prayer-api/internal/domain/identity"
 )
 
 func (s *Service) Delete(
@@ -22,7 +23,11 @@ func (s *Service) Delete(
 	}
 
 	// 2. Find the user.
-	u, err := s.users.FindByID(ctx, userID)
+	u, err := s.users.FindByExternalID(
+		ctx, 
+		strings.TrimSpace(userID.String()),
+	)
+	
 	if err != nil {
 		return err
 	}

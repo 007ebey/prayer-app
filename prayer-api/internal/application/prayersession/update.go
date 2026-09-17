@@ -3,8 +3,9 @@ package prayersession
 import (
 	"context"
 	"strings"
-
+    "prayer-api/internal/domain/identity"
 	domain "prayer-api/internal/domain/prayersession"
+	"errors"
 )
 
 func (s *Service) Update(
@@ -32,16 +33,15 @@ func (s *Service) Update(
 		return nil, ErrNotFound
 	}
 
-	// A user can only update a session belonging
-	// to a prayer group they have access to.
-	if err := s.requireGroupAccess(
-		ctx,
-		cmd.ActorID,
-		session.PrayerGroupID,
-	); err != nil {
-		return nil, err
+	u, err := s.users.FindByExternalID(ctx, strings.TrimSpace(cmd.ActorID.String()))
+	if err != nil {
+		return nil, ErrUserNotFound
 	}
 
+	if !u.HasPrayerGroup(session.PrayerGroupID) {
+		return nil, ErrForbidden
+	}
+	
 	// Validate title.
 	title := strings.TrimSpace(cmd.Title)
 

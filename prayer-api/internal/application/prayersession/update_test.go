@@ -2,14 +2,12 @@ package prayersession
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	app "prayer-api/internal/application/prayersession"
 	"prayer-api/internal/domain/identity"
 	domain "prayer-api/internal/domain/prayersession"
 	domainuser "prayer-api/internal/domain/user"
@@ -78,11 +76,11 @@ func TestUpdate_Success(t *testing.T) {
 		},
 	}
 
-	service := app.NewService(sessions, users)
+	service := NewService(sessions, users)
 
 	result, err := service.Update(
 		context.Background(),
-		app.UpdateCommand{
+		UpdateCommand{
 			ActorID:   actorID,
 			SessionID: sessionID,
 			Title:     "Evening Prayer",

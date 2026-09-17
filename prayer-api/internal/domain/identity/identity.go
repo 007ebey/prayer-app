@@ -15,3 +15,7 @@ func (id PrayerSessionID) String() string {
 func (id PrayerGroupID) String() string {
 	return string(id)
 }
+
+func (id UserID) String() string {
+	return string(id)
+}
