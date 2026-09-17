@@ -2,10 +2,6 @@ package prayersession
 
 import (
 	"context"
-	"time"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"prayer-api/internal/domain/identity"
 	domain "prayer-api/internal/domain/prayersession"

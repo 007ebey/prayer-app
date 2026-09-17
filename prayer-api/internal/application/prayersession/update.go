@@ -2,10 +2,12 @@ package prayersession
 
 import (
 	"context"
-	"strings"
-    "prayer-api/internal/domain/identity"
-	domain "prayer-api/internal/domain/prayersession"
 	"errors"
+	"strings"
+
+	"prayer-api/internal/domain/identity"
+	domain "prayer-api/internal/domain/prayersession"
+	domainuser "prayer-api/internal/domain/user"
 )
 
 func (s *Service) Update(
@@ -35,7 +37,11 @@ func (s *Service) Update(
 
 	u, err := s.users.FindByExternalID(ctx, strings.TrimSpace(cmd.ActorID.String()))
 	if err != nil {
-		return nil, ErrUserNotFound
+		return nil, err
+	}
+
+	if u == nil {
+		return nil, domainuser.ErrUserNotFound
 	}
 
 	if !u.HasPrayerGroup(session.PrayerGroupID) {
