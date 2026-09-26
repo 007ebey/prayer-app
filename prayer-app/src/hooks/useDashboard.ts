@@ -1,15 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { prayerApi } from "../services/api";
 
-export interface PrayerSession {
-    id: string;
-    prayerGroupID: string;
-    title: string;
-    date: string;
-    time: string;
-    duration: number;
-    prayerPointIDs?: string[];
-}
+import {
+    prayerApi,
+    type PrayerSession,
+} from "../services/api";
+
+import { useAuth } from "./useAuth";
 
 interface DashboardState {
     activePrayer: PrayerSession | null;
@@ -18,14 +14,23 @@ interface DashboardState {
     error: string | null;
 }
 
+const getSessionStart = (
+    session: PrayerSession
+): Date => {
+    // Go's time.Time is serialized as an ISO timestamp.
+    // The session's clock time is stored separately.
+    const date = session.date.slice(0, 10);
+
+    return new Date(
+        `${date}T${session.time}`
+    );
+};
+
 const isSessionActive = (
     session: PrayerSession,
     now: Date
 ): boolean => {
-
-    const start = new Date(
-        `${session.date}T${session.time}`
-    );
+    const start = getSessionStart(session);
 
     const end = new Date(
         start.getTime() +
@@ -36,6 +41,12 @@ const isSessionActive = (
 };
 
 export const useDashboard = (): DashboardState => {
+
+    const {
+        isLoaded,
+        isSignedIn,
+        isInitializing,
+    } = useAuth();
 
     const [sessions, setSessions] =
         useState<PrayerSession[]>([]);
@@ -51,10 +62,6 @@ export const useDashboard = (): DashboardState => {
 
     /*
      * Keep the dashboard clock updated.
-     *
-     * This allows an upcoming prayer to automatically
-     * become the active prayer without requiring a
-     * page refresh.
      */
     useEffect(() => {
 
@@ -69,9 +76,30 @@ export const useDashboard = (): DashboardState => {
     }, []);
 
     /*
-     * Load prayer sessions.
+     * Load prayer sessions only after the complete
+     * authentication flow has finished.
+     *
+     * isLoaded:
+     *   Clerk + user state is loaded.
+     *
+     * isInitializing:
+     *   Our application is still synchronizing the
+     *   authenticated user with the Prayer API.
      */
     useEffect(() => {
+
+        if (!isLoaded || isInitializing) {
+            return;
+        }
+
+        /*
+         * User is not authenticated.
+         */
+        if (!isSignedIn) {
+            setSessions([]);
+            setIsLoading(false);
+            return;
+        }
 
         const loadSessions = async () => {
 
@@ -83,9 +111,14 @@ export const useDashboard = (): DashboardState => {
                 const response =
                     await prayerApi.listPrayerSessions();
 
-                console.log("Loaded prayer sessions:", response.data);
+                console.log(
+                    "Loaded prayer sessions:",
+                    response.data
+                );
 
-                setSessions(response.data);
+                setSessions(
+                    response.data.prayerSessions
+                );
 
             } catch (error) {
 
@@ -106,9 +139,13 @@ export const useDashboard = (): DashboardState => {
 
         };
 
-        loadSessions();
+        void loadSessions();
 
-    }, []);
+    }, [
+        isLoaded,
+        isSignedIn,
+        isInitializing,
+    ]);
 
     /*
      * Find the currently active prayer.
@@ -138,26 +175,17 @@ export const useDashboard = (): DashboardState => {
                 .filter((session) => {
 
                     const start =
-                        new Date(
-                            `${session.date}T${session.time}`
-                        );
+                        getSessionStart(session);
 
                     return start > now;
 
                 })
                 .sort((a, b) => {
 
-                    const aStart =
-                        new Date(
-                            `${a.date}T${a.time}`
-                        ).getTime();
-
-                    const bStart =
-                        new Date(
-                            `${b.date}T${b.time}`
-                        ).getTime();
-
-                    return aStart - bStart;
+                    return (
+                        getSessionStart(a).getTime() -
+                        getSessionStart(b).getTime()
+                    );
 
                 });
 
@@ -166,7 +194,19 @@ export const useDashboard = (): DashboardState => {
     return {
         activePrayer,
         upcomingPrayers,
-        isLoading,
+
+        /*
+         * Dashboard remains loading while:
+         *
+         * 1. Clerk is loading
+         * 2. Prayer API authentication is initializing
+         * 3. Prayer sessions are being fetched
+         */
+        isLoading:
+            !isLoaded ||
+            isInitializing ||
+            isLoading,
+
         error,
     };
 };

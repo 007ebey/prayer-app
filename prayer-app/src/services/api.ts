@@ -2,6 +2,20 @@ import axios, { type AxiosError, type AxiosResponse } from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
+export interface PrayerSession {
+  id: string;
+  prayerGroupID: string;
+  title: string;
+  date: string;
+  time: string;
+  duration: number;
+  prayerPointIDs?: string[];
+}
+
+export interface PrayerSessionsResponse {
+  prayerSessions: PrayerSession[];
+}
+
 // Create axios instance with base configuration
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -84,7 +98,7 @@ export const prayerApi = {
   blockUserFromPrayerGroup: (userId: string, groupId: string) =>
     apiClient.post(`/api/users/${userId}/prayer-groups/${groupId}/block`),
 
-  listPrayerSessions: () => apiClient.get('/api/prayer-sessions'),
+  listPrayerSessions: () => apiClient.get<PrayerSessionsResponse>('/api/prayer-sessions'),
 };
 
 // Utility function to set authorization token

@@ -15,13 +15,13 @@ var (
 )
 
 type PrayerSession struct {
-	ID             identity.PrayerSessionID
-	PrayerGroupID  identity.PrayerGroupID
-	Title          string
-	Date           time.Time
-	Time           string
-	Duration       int // duration in minutes
-	PrayerPointIDs []identity.PrayerPointID
+    ID             identity.PrayerSessionID `json:"id"`
+    PrayerGroupID  identity.PrayerGroupID   `json:"prayerGroupID"`
+    Title          string                   `json:"title"`
+    Date           time.Time                `json:"date"`
+    Time           string                   `json:"time"`
+    Duration       int                      `json:"duration"`
+    PrayerPointIDs []identity.PrayerPointID `json:"prayerPointIDs"`
 }
 
 func New(
