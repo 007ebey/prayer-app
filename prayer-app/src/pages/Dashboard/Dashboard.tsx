@@ -17,7 +17,10 @@ import NoActivePrayer from "../../NoActivePrayer";
 import UpcomingPrayers from "../../UpcomingPrayers";
 
 import PrayerWall from "../PrayerWall/PrayerWall";
-import { useClerk } from '@clerk/clerk-react';
+
+import { useClerk } from "@clerk/clerk-react";
+
+import { useDashboard } from "../../hooks/useDashboard";
 
 type DashboardPage =
     | "home"
@@ -25,18 +28,21 @@ type DashboardPage =
 
 const Dashboard = () => {
 
-    // Temporary UI state.
-    // Later this will come from session/backend state.
-    const hasActivePrayer = true;
-    const { signOut } = useClerk();
-
-    const handleLogout = async () => {
-      await signOut();
-    };
-
     const [page, setPage] =
         useState<DashboardPage>("home");
 
+    const { signOut } = useClerk();
+
+    const {
+        activePrayer,
+        upcomingPrayers,
+        isLoading,
+        error,
+    } = useDashboard();
+
+    const handleLogout = async () => {
+        await signOut();
+    };
 
     if (page === "prayer-wall") {
 
@@ -60,7 +66,6 @@ const Dashboard = () => {
 
     }
 
-
     return (
 
         <div className="min-h-screen bg-background">
@@ -77,43 +82,74 @@ const Dashboard = () => {
                             icon={<Church />}
                             name="Prayer App"
                         />
-                        
+
                         <ThemeSwitcher />
 
                         <Button
                             variant="outline"
-                            onClick={ async () =>
-                                await handleLogout()
-                            }
+                            onClick={handleLogout}
                         >
                             Logout
                         </Button>
 
                     </div>
 
+                    {/* Loading */}
 
-                    {/* Active Prayer */}
+                    {isLoading && (
 
-                    {hasActivePrayer ? (
-
-                        <ActivePrayer
-                            onJoin={() =>
-                                setPage(
-                                    "prayer-wall"
-                                )
-                            }
-                        />
-
-                    ) : (
-
-                        <NoActivePrayer />
+                        <div>
+                            Loading prayer sessions...
+                        </div>
 
                     )}
 
+                    {/* Error */}
 
-                    {/* Upcoming Prayers */}
+                    {!isLoading && error && (
 
-                    <UpcomingPrayers />
+                        <div>
+                            {error}
+                        </div>
+
+                    )}
+
+                    {/* Dashboard Content */}
+
+                    {!isLoading && !error && (
+
+                        <>
+
+                            {/* Active Prayer */}
+
+                            {activePrayer ? (
+
+                                <ActivePrayer
+                                    prayer={activePrayer}
+                                    onJoin={() =>
+                                        setPage(
+                                            "prayer-wall"
+                                        )
+                                    }
+                                />
+
+                            ) : (
+
+                                <NoActivePrayer />
+
+                            )}
+
+                            {/* Upcoming Prayers */}
+
+                            <UpcomingPrayers
+                                prayers={
+                                    upcomingPrayers
+                                }
+                            />
+
+                        </>
+
+                    )}
 
                 </Stack>
 
@@ -126,3 +162,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

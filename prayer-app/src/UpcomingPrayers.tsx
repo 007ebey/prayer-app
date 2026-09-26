@@ -16,105 +16,41 @@ import {
     Button,
 } from "./../primitives";
 
-const upcomingPrayers = [
-    {
-        id: 1,
-        title: "Morning Prayer",
-        description: "Start the day together in prayer.",
-        day: "Tomorrow",
-        time: "6:00 AM",
-        duration: "30 min",
-        interested: 18,
-    },
-    {
-        id: 2,
-        title: "Lunch Prayer",
-        description: "Take a moment in the middle of the day to pray.",
-        day: "Tomorrow",
-        time: "1:00 PM",
-        duration: "20 min",
-        interested: 12,
-    },
-    {
-        id: 3,
-        title: "Evening Intercession",
-        description: "Come together and intercede for others.",
-        day: "Tomorrow",
-        time: "7:00 PM",
-        duration: "45 min",
-        interested: 34,
-    },
-    {
-        id: 4,
-        title: "Prayer for Families",
-        description: "Pray for marriages, children, parents, and homes.",
-        day: "Friday",
-        time: "8:00 PM",
-        duration: "45 min",
-        interested: 27,
-    },
-    {
-        id: 5,
-        title: "Healing Prayer",
-        description: "A focused time of prayer for healing and restoration.",
-        day: "Saturday",
-        time: "6:30 PM",
-        duration: "60 min",
-        interested: 41,
-    },
-    {
-        id: 6,
-        title: "Prayer for the Nation",
-        description: "Intercede together for leaders, communities, and the nation.",
-        day: "Sunday",
-        time: "7:30 PM",
-        duration: "45 min",
-        interested: 52,
-    },
-    {
-        id: 7,
-        title: "Students Prayer",
-        description: "Pray for students, schools, universities, and their future.",
-        day: "Monday",
-        time: "7:00 AM",
-        duration: "30 min",
-        interested: 16,
-    },
-    {
-        id: 8,
-        title: "Workplace Prayer",
-        description: "Pray for wisdom, opportunities, workplaces, and careers.",
-        day: "Tuesday",
-        time: "7:00 AM",
-        duration: "30 min",
-        interested: 23,
-    },
-    {
-        id: 9,
-        title: "Night Prayer",
-        description: "End the day in worship, thanksgiving, and prayer.",
-        day: "Wednesday",
-        time: "10:00 PM",
-        duration: "30 min",
-        interested: 29,
-    },
-];
+interface PrayerSession {
+    id: string;
+    prayerGroupID: string;
+    title: string;
+    date: string;
+    time: string;
+    duration: number;
+    prayerPointIDs?: string[];
+}
+
+interface UpcomingPrayersProps {
+    prayers: PrayerSession[];
+}
 
 const INITIAL_VISIBLE_COUNT = 3;
 
-const UpcomingPrayers = () => {
+const formatDate = (date: string): string => {
+    return new Date(date).toLocaleDateString("en-IN", {
+        weekday: "long",
+    });
+};
+
+const UpcomingPrayers = ({
+    prayers,
+}: UpcomingPrayersProps) => {
     const [showAll, setShowAll] = useState(false);
 
     const visiblePrayers = showAll
-        ? upcomingPrayers
-        : upcomingPrayers.slice(
-              0,
-              INITIAL_VISIBLE_COUNT
-          );
+        ? prayers
+        : prayers.slice(0, INITIAL_VISIBLE_COUNT);
 
-    const hiddenCount =
-        upcomingPrayers.length -
-        INITIAL_VISIBLE_COUNT;
+    const hiddenCount = Math.max(
+        prayers.length - INITIAL_VISIBLE_COUNT,
+        0
+    );
 
     return (
         <Stack gap="lg">
@@ -138,34 +74,27 @@ const UpcomingPrayers = () => {
 
                 </Stack>
 
-                {upcomingPrayers.length >
-                    INITIAL_VISIBLE_COUNT && (
-
+                {prayers.length > INITIAL_VISIBLE_COUNT && (
                     <Button
                         variant="ghost"
                         size="sm"
                         onClick={() =>
-                            setShowAll(
-                                (previous) => !previous
-                            )
+                            setShowAll((previous) => !previous)
                         }
                     >
                         {showAll
                             ? "Show less"
-                            : `View all (${upcomingPrayers.length})`}
+                            : `View all (${prayers.length})`}
 
                         {showAll ? (
                             <ChevronUp className="h-4 w-4" />
                         ) : (
                             <ArrowRight className="h-4 w-4" />
                         )}
-
                     </Button>
-
                 )}
 
             </div>
-
 
             {/* Sessions */}
 
@@ -190,18 +119,7 @@ const UpcomingPrayers = () => {
                                     UPCOMING
                                 </Badge>
 
-                                <div className="flex items-center gap-1.5 text-muted-foreground">
-
-                                    <Users className="h-4 w-4" />
-
-                                    <span className="text-sm">
-                                        {prayer.interested}
-                                    </span>
-
-                                </div>
-
                             </div>
-
 
                             {/* Title */}
 
@@ -215,11 +133,11 @@ const UpcomingPrayers = () => {
                                     variant="body-sm"
                                     color="muted"
                                 >
-                                    {prayer.description}
+                                    Join us for a time of prayer
+                                    and fellowship.
                                 </Typography>
 
                             </Stack>
-
 
                             {/* Schedule */}
 
@@ -230,7 +148,7 @@ const UpcomingPrayers = () => {
                                     <CalendarDays className="h-4 w-4" />
 
                                     <span className="text-sm">
-                                        {prayer.day}
+                                        {formatDate(prayer.date)}
                                     </span>
 
                                 </div>
@@ -247,14 +165,13 @@ const UpcomingPrayers = () => {
 
                             </div>
 
-
                             {/* Duration */}
 
                             <Typography
                                 variant="body-sm"
                                 color="muted"
                             >
-                                {prayer.duration}
+                                {prayer.duration} min
                             </Typography>
 
                         </Stack>
@@ -265,19 +182,32 @@ const UpcomingPrayers = () => {
 
             </div>
 
+            {/* Empty state */}
+
+            {prayers.length === 0 && (
+                <Surface
+                    elevation="raised"
+                    padding="lg"
+                    radius="lg"
+                >
+                    <Typography
+                        variant="body"
+                        color="muted"
+                    >
+                        No upcoming prayer sessions.
+                    </Typography>
+                </Surface>
+            )}
 
             {/* Expanded state footer */}
 
             {showAll && hiddenCount > 0 && (
-
                 <div className="flex justify-center">
 
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() =>
-                            setShowAll(false)
-                        }
+                        onClick={() => setShowAll(false)}
                     >
                         Show less
 
@@ -285,7 +215,6 @@ const UpcomingPrayers = () => {
                     </Button>
 
                 </div>
-
             )}
 
         </Stack>

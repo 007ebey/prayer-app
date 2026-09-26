@@ -35,7 +35,7 @@ const isSessionActive = (
     return now >= start && now < end;
 };
 
-const useDashboard = (): DashboardState => {
+export const useDashboard = (): DashboardState => {
 
     const [sessions, setSessions] =
         useState<PrayerSession[]>([]);

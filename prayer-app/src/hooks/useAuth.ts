@@ -37,7 +37,7 @@ export function useAuth() {
       try {
         const token = await getToken();
 
-        setAuthToken(token);
+        // setAuthToken(token);
 
         // Synchronize the authenticated Clerk user
         // with the Prayer API.
@@ -47,6 +47,8 @@ export function useAuth() {
 
           console.log("Prayer API login:", response.data);
           console.log("Roles:", response.data.user.roles);
+
+          setAuthToken(token);
         } catch (error) {
           if (axios.isAxiosError(error)) {
             console.error("Prayer API login failed");

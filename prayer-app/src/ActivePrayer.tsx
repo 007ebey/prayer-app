@@ -10,11 +10,25 @@ import {
     Button,
 } from "./../primitives";
 
+interface PrayerSession {
+    id: string;
+    prayerGroupID: string;
+    title: string;
+    date: string;
+    time: string;
+    duration: number;
+    prayerPointIDs?: string[];
+}
+
 interface ActivePrayerProps {
+    prayer: PrayerSession;
     onJoin: () => void;
 }
 
-const ActivePrayer = ({ onJoin }: ActivePrayerProps) => {
+const ActivePrayer = ({
+    prayer,
+    onJoin,
+}: ActivePrayerProps) => {
     return (
         <Surface
             elevation="raised"
@@ -28,15 +42,14 @@ const ActivePrayer = ({ onJoin }: ActivePrayerProps) => {
                 </Badge>
 
                 <Typography variant="display">
-                    Evening Prayer Meeting
+                    {prayer.title}
                 </Typography>
 
                 <Typography
                     variant="subtitle"
                     color="muted"
                 >
-                    Join believers across the world
-                    praying together.
+                    Join believers praying together.
                 </Typography>
 
                 <div className="flex flex-wrap items-center gap-6">
@@ -64,7 +77,7 @@ const ActivePrayer = ({ onJoin }: ActivePrayerProps) => {
                         <Clock className="h-4 w-4" />
 
                         <span className="text-sm">
-                            7:00 PM • 45 min
+                            {prayer.time} • {prayer.duration} min
                         </span>
                     </div>
 
