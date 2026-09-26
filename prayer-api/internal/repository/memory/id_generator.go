@@ -24,3 +24,6 @@ func (g *IDGenerator) NewPrayerGroupID() identity.PrayerGroupID {
 	id := atomic.AddUint64(&g.next, 1)
 	return identity.PrayerGroupID(fmt.Sprintf("group_%d", id))
 }
+
+const defaultPrayerGroupID = identity.PrayerGroupID("group-public")
+

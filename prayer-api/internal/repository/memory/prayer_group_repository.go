@@ -27,13 +27,29 @@ func NewPrayerGroupRepository() *PrayerGroupRepository {
 		panic(err)
 	}
 
-	return &PrayerGroupRepository{
+	repo := &PrayerGroupRepository{
 		visitor: visitor,
 		groups: map[identity.PrayerGroupID]*prayergroup.PrayerGroup{
 			visitor.ID: visitor,
 		},
 		access: make(map[string]prayergroup.Access),
 	}
+
+	repo.seedDefaultGroup()
+
+	return repo
+}
+
+func (r *PrayerGroupRepository) seedDefaultGroup() {
+	group := &prayergroup.PrayerGroup{
+		ID:          identity.PrayerGroupID("group-public"),
+		Name:        "Public Prayer",
+		Description: "Public prayer group",
+		Type:        prayergroup.TypeRegular,
+		Status:      prayergroup.StatusActive,
+	}
+
+	r.groups[group.ID] = group
 }
 
 func accessKey(userID identity.UserID, groupID identity.PrayerGroupID) string {

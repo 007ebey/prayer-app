@@ -409,3 +409,183 @@ func (h *PrayerSessionHandler) List(
 		},
 	)
 }
+
+func (h *PrayerSessionHandler) Update(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	claims, ok := clerk.SessionClaimsFromContext(
+		r.Context(),
+	)
+
+	if !ok {
+		writeJSON(
+			w,
+			http.StatusUnauthorized,
+			map[string]any{
+				"error": "unauthorized",
+			},
+		)
+		return
+	}
+
+	sessionID := domainid.PrayerSessionID(
+		r.PathValue("sessionID"),
+	)
+
+	if sessionID.String() == "" {
+		writeJSON(
+			w,
+			http.StatusBadRequest,
+			map[string]any{
+				"error": "sessionID is required",
+			},
+		)
+		return
+	}
+
+	var request updatePrayerSessionRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeJSON(
+			w,
+			http.StatusBadRequest,
+			map[string]any{
+				"error": "invalid request body",
+			},
+		)
+		return
+	}
+
+	if request.Title == nil ||
+		request.Date == nil ||
+		request.Time == nil ||
+		request.Duration == nil {
+		writeJSON(
+			w,
+			http.StatusBadRequest,
+			map[string]any{
+				"error": "title, date, time and duration are required",
+			},
+		)
+		return
+	}
+
+	sessionDate, err := time.Parse(
+		"2006-01-02",
+		*request.Date,
+	)
+
+	if err != nil {
+		writeJSON(
+			w,
+			http.StatusBadRequest,
+			map[string]any{
+				"error": "invalid date",
+			},
+		)
+		return
+	}
+
+	var prayerPointIDs []domainid.PrayerPointID
+
+	if request.PrayerPointIDs != nil {
+		prayerPointIDs = *request.PrayerPointIDs
+	}
+
+	session, err := h.update.Update(
+		r.Context(),
+		appprayersession.UpdateCommand{
+			ActorID:        domainid.UserID(claims.Subject),
+			SessionID:      sessionID,
+			Title:          *request.Title,
+			Date:           sessionDate,
+			Time:           *request.Time,
+			Duration:       *request.Duration,
+			PrayerPointIDs: prayerPointIDs,
+		},
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(
+			err,
+			appprayersession.ErrNotFound,
+		):
+			writeJSON(
+				w,
+				http.StatusNotFound,
+				map[string]any{
+					"error": "prayer session not found",
+				},
+			)
+
+		case errors.Is(
+			err,
+			appprayersession.ErrUserNotFound,
+		):
+			writeJSON(
+				w,
+				http.StatusNotFound,
+				map[string]any{
+					"error": "user not found",
+				},
+			)
+
+		case errors.Is(
+			err,
+			appprayersession.ErrForbidden,
+		):
+			writeJSON(
+				w,
+				http.StatusForbidden,
+				map[string]any{
+					"error": "forbidden",
+				},
+			)
+
+		case errors.Is(
+			err,
+			appprayersession.ErrTitleRequired,
+		),
+			errors.Is(
+				err,
+				appprayersession.ErrTimeRequired,
+			),
+			errors.Is(
+				err,
+				appprayersession.ErrInvalidDuration,
+			),
+			errors.Is(
+				err,
+				appprayersession.ErrInvalidDate,
+			):
+			writeJSON(
+				w,
+				http.StatusBadRequest,
+				map[string]any{
+					"error": err.Error(),
+				},
+			)
+
+		default:
+			writeJSON(
+				w,
+				http.StatusInternalServerError,
+				map[string]any{
+					"error": "internal server error",
+				},
+			)
+		}
+
+		return
+	}
+
+	writeJSON(
+		w,
+		http.StatusOK,
+		map[string]any{
+			"prayerSession": session,
+		},
+	)
+}

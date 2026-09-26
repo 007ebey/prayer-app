@@ -3,7 +3,7 @@ package memory
 import (
 	"context"
 	"sync"
-
+    "time"
 	"prayer-api/internal/domain/identity"
 	"prayer-api/internal/domain/prayersession"
 )
@@ -13,9 +13,72 @@ type PrayerSessionRepository struct {
 	sessions map[identity.PrayerSessionID]*prayersession.PrayerSession
 }
 
+
 func NewPrayerSessionRepository() *PrayerSessionRepository {
+	sessions := make(map[identity.PrayerSessionID]*prayersession.PrayerSession)
+
+	now := time.Now()
+
+	// Active session:
+	// Started 15 minutes ago and lasts 60 minutes.
+	activeStart := now.Add(-15 * time.Minute)
+
+	// Upcoming session:
+	// Starts tomorrow at 19:00.
+	upcomingDate := now.AddDate(0, 0, 1)
+
+	defaultSessions := []*prayersession.PrayerSession{
+		{
+			ID:            identity.PrayerSessionID("session-active"),
+			PrayerGroupID: defaultPrayerGroupID,
+			Title:         "Evening Prayer",
+			Date:          activeStart,
+			Time:          activeStart.Format("15:04"),
+			Duration:      60,
+			PrayerPointIDs: []identity.PrayerPointID{
+				identity.PrayerPointID("prayer-point-001"),
+				identity.PrayerPointID("prayer-point-002"),
+			},
+		},
+		{
+			ID:            identity.PrayerSessionID("session-upcoming"),
+			PrayerGroupID: defaultPrayerGroupID,
+			Title:         "Prayer for Students",
+			Date:          upcomingDate,
+			Time:          "19:00",
+			Duration:      45,
+			PrayerPointIDs: []identity.PrayerPointID{
+				identity.PrayerPointID("prayer-point-003"),
+			},
+		},
+		{
+			ID:            identity.PrayerSessionID("session-community"),
+			PrayerGroupID: defaultPrayerGroupID,
+			Title:         "Community Prayer",
+			Date:          now.AddDate(0, 0, 2),
+			Time:          "07:00",
+			Duration:      30,
+			PrayerPointIDs: []identity.PrayerPointID{
+				identity.PrayerPointID("prayer-point-001"),
+				identity.PrayerPointID("prayer-point-002"),
+				identity.PrayerPointID("prayer-point-003"),
+			},
+		},
+	}
+
+	for _, session := range defaultSessions {
+		copy := *session
+
+		copy.PrayerPointIDs = append(
+			[]identity.PrayerPointID(nil),
+			session.PrayerPointIDs...,
+		)
+
+		sessions[session.ID] = &copy
+	}
+
 	return &PrayerSessionRepository{
-		sessions: make(map[identity.PrayerSessionID]*prayersession.PrayerSession),
+		sessions: sessions,
 	}
 }
 

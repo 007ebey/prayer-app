@@ -3,7 +3,6 @@ package memory
 import (
 	"context"
 	"sync"
-
 	"prayer-api/internal/domain/identity"
 	"prayer-api/internal/domain/prayerpoint"
 )
@@ -14,8 +13,48 @@ type PrayerPointRepository struct {
 }
 
 func NewPrayerPointRepository() *PrayerPointRepository {
+	points := make(map[identity.PrayerPointID]*prayerpoint.PrayerPoint)
+
+	defaultPoints := []struct {
+		id      identity.PrayerPointID
+		title   string
+		content string
+	}{
+		{
+			id:      identity.PrayerPointID("prayer-point-001"),
+			title:   "Pray for our city",
+			content: "Pray for peace, wisdom, and blessing over Bengaluru.",
+		},
+		{
+			id:      identity.PrayerPointID("prayer-point-002"),
+			title:   "Pray for families",
+			content: "Pray for strength, unity, healing, and provision for families.",
+		},
+		{
+			id:      identity.PrayerPointID("prayer-point-003"),
+			title:   "Pray for students",
+			content: "Pray for wisdom, focus, and guidance for students.",
+		},
+	}
+
+	for _, seed := range defaultPoints {
+
+		point, err := prayerpoint.New(
+			seed.id,
+			defaultPrayerGroupID,
+			seed.title,
+			seed.content,
+		)
+
+		if err != nil {
+			panic(err)
+		}
+
+		points[point.ID] = point
+	}
+
 	return &PrayerPointRepository{
-		points: make(map[identity.PrayerPointID]*prayerpoint.PrayerPoint),
+		points: points,
 	}
 }
 

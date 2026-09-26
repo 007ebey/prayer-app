@@ -8,6 +8,7 @@ import (
 
 	appauth "prayer-api/internal/application/auth"
 	appprayergroup "prayer-api/internal/application/prayergroup"
+	appprayersession "prayer-api/internal/application/prayersession"
 	"prayer-api/internal/application/userprofile"
 	"prayer-api/internal/application/userrole"
 	identityauth "prayer-api/internal/auth"
@@ -28,6 +29,7 @@ func main() {
 	roles := memory.NewRoleRepository()
 	groups := memory.NewPrayerGroupRepository()
 	ids := memory.NewIDGenerator()
+	prayerSessions := memory.NewPrayerSessionRepository()
 
 	// claims, ok := clerk.SessionClaimsFromContext(r.Context())
 
@@ -111,6 +113,22 @@ func main() {
 		prayerGroupBlockService,
     )
 
+    // ─────────────────────────────────────────────
+	// Prayer Sessions
+	// ─────────────────────────────────────────────
+
+	prayerSessionService := appprayersession.NewService(
+		prayerSessions,
+		users,
+	)
+
+	prayerSessionHandler := httpapi.NewPrayerSessionHandler(
+		prayerSessionService,
+		prayerSessionService,
+		prayerSessionService,
+		prayerSessionService,
+	)
+
 	userHandler := httpapi.NewUserHandler(
 		profileService,
 	)
@@ -119,10 +137,12 @@ func main() {
 		userRoleService,
 	)
 
-	router := httpapi.NewRouter(authHandler,
+	router := httpapi.NewRouter(
+		authHandler,
 		userHandler,
 		userRoleHandler,
 		prayerGroupHandler,
+		prayerSessionHandler,
 	)
 
 	address := ":" + cfg.Port

@@ -6,8 +6,12 @@ import (
 	clerkhttp "github.com/clerk/clerk-sdk-go/v2/http"
 )
 
-func NewRouter(auth *AuthHandler, users *UserHandler, userRoles *UserRoleHandler,
+func NewRouter(
+	auth *AuthHandler, 
+	users *UserHandler,
+	userRoles *UserRoleHandler,
 	prayerGroupHandler *PrayerGroupHandler,
+	prayerSessionHandler *PrayerSessionHandler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -86,8 +90,38 @@ func NewRouter(auth *AuthHandler, users *UserHandler, userRoles *UserRoleHandler
 
 	mux.Handle(
         "POST /api/users/{userID}/prayer-groups/{groupID}/block",
-        http.HandlerFunc(prayerGroupHandler.BlockPrayerGroup),
+        clerkhttp.RequireHeaderAuthorization()(
+            http.HandlerFunc(prayerGroupHandler.BlockPrayerGroup),
+        ),
     )
+
+	mux.Handle(
+		"GET /api/prayer-sessions",
+		clerkhttp.RequireHeaderAuthorization()(
+			http.HandlerFunc(prayerSessionHandler.List),
+		),
+	)
+
+	mux.Handle(
+		"POST /api/prayer-sessions",
+		clerkhttp.RequireHeaderAuthorization()(
+			http.HandlerFunc(prayerSessionHandler.Create),
+		),
+	)
+
+	mux.Handle(
+		"PATCH /api/prayer-sessions/{sessionID}",
+		clerkhttp.RequireHeaderAuthorization()(
+			http.HandlerFunc(prayerSessionHandler.Update),
+		),
+	)
+
+	mux.Handle(
+		"DELETE /api/prayer-sessions/{sessionID}",
+		clerkhttp.RequireHeaderAuthorization()(
+			http.HandlerFunc(prayerSessionHandler.Delete),
+		),
+	)
 
 	return corsMiddleware(mux)
 }

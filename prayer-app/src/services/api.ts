@@ -83,6 +83,8 @@ export const prayerApi = {
 
   blockUserFromPrayerGroup: (userId: string, groupId: string) =>
     apiClient.post(`/api/users/${userId}/prayer-groups/${groupId}/block`),
+
+  listPrayerSessions: () => apiClient.get('/api/prayer-sessions'),
 };
 
 // Utility function to set authorization token
