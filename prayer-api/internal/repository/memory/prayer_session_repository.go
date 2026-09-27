@@ -31,7 +31,8 @@ func NewPrayerSessionRepository() *PrayerSessionRepository {
 		{
 			ID:            identity.PrayerSessionID("session-active"),
 			PrayerGroupID: defaultPrayerGroupID,
-			Title:         "Evening Prayer",
+			Title:         "Cool Evening Prayer",
+			Description:   "A cool evening prayer session",
 			Date:          activeStart,
 			Time:          activeStart.Format("15:04"),
 			Duration:      60,
@@ -44,6 +45,7 @@ func NewPrayerSessionRepository() *PrayerSessionRepository {
 			ID:            identity.PrayerSessionID("session-upcoming"),
 			PrayerGroupID: defaultPrayerGroupID,
 			Title:         "Prayer for Students",
+			Description:   "A prayer session for students",
 			Date:          upcomingDate,
 			Time:          "19:00",
 			Duration:      45,
@@ -57,6 +59,7 @@ func NewPrayerSessionRepository() *PrayerSessionRepository {
 			Title:         "Community Prayer",
 			Date:          now.AddDate(0, 0, 2),
 			Time:          "07:00",
+			Description:   "A community prayer session",
 			Duration:      30,
 			PrayerPointIDs: []identity.PrayerPointID{
 				identity.PrayerPointID("prayer-point-001"),

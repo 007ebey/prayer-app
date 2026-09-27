@@ -18,6 +18,7 @@ type PrayerSession struct {
     ID             identity.PrayerSessionID `json:"id"`
     PrayerGroupID  identity.PrayerGroupID   `json:"prayerGroupID"`
     Title          string                   `json:"title"`
+	Description    string                   `json:"description"`
     Date           time.Time                `json:"date"`
     Time           string                   `json:"time"`
     Duration       int                      `json:"duration"`
@@ -28,6 +29,7 @@ func New(
 	id identity.PrayerSessionID,
 	prayerGroupID identity.PrayerGroupID,
 	title string,
+	description string,
 	date time.Time,
 	sessionTime string,
 	duration int,
@@ -56,7 +58,8 @@ func New(
 	return &PrayerSession{
 		ID:             id,
 		PrayerGroupID:  prayerGroupID,
-		Title:         strings.TrimSpace(title),
+		Title:          strings.TrimSpace(title),
+		Description:    strings.TrimSpace(description),
 		Date:           date,
 		Time:           strings.TrimSpace(sessionTime),
 		Duration:       duration,

@@ -8,15 +8,18 @@ import (
 type Service struct {
 	sessions PrayerSessionRepository
 	users    UserRepository
+	prayerPoints PrayerPointRepository
 }
 
 func NewService(
 	sessions PrayerSessionRepository,
 	users UserRepository,
+	prayerPoints PrayerPointRepository,
 ) *Service {
 	return &Service{
 		sessions: sessions,
 		users:    users,
+		prayerPoints: prayerPoints,
 	}
 }
 
@@ -24,6 +27,7 @@ type CreateCommand struct {
 	ActorID        identity.UserID
 	PrayerGroupID  identity.PrayerGroupID
 	Title          string
+	Description    string
 	Date           time.Time
 	Time           string
 	Duration       int
@@ -34,6 +38,7 @@ type UpdateCommand struct {
 	ActorID        identity.UserID
 	SessionID      identity.PrayerSessionID
 	Title          string
+	Description    string
 	Date           time.Time
 	Time           string
 	Duration       int

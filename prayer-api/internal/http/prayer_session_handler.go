@@ -11,6 +11,7 @@ import (
 	domainid "prayer-api/internal/domain/identity"
 	domainuser "prayer-api/internal/domain/user"
 	domain "prayer-api/internal/domain/prayersession"
+	"prayer-api/internal/domain/prayerpoint"
 	appprayersession "prayer-api/internal/application/prayersession"
 )
 
@@ -45,7 +46,7 @@ type ListPrayerSessionService interface {
 	ListForUser(
 		ctx context.Context,
 		userID domainid.UserID,
-	) ([]domain.PrayerSession, error)
+	) ([]appprayersession.PrayerSessionWithPoints, error)
 }
 
 
@@ -93,6 +94,18 @@ type updatePrayerSessionRequest struct {
 	Time           *string                   `json:"time"`
 	Duration       *int                      `json:"duration"`
 	PrayerPointIDs *[]domainid.PrayerPointID `json:"prayerPointIDs"`
+}
+
+type prayerSessionResponse struct {
+	ID             domainid.PrayerSessionID   `json:"id"`
+	PrayerGroupID  domainid.PrayerGroupID     `json:"prayerGroupID"`
+	Title          string                     `json:"title"`
+	Description    string                     `json:"description"`
+	Date           time.Time                  `json:"date"`
+	Time           string                     `json:"time"`
+	Duration       int                        `json:"duration"`
+	PrayerPointIDs []domainid.PrayerPointID   `json:"prayerPointIDs"`
+	PrayerPoints   []prayerpoint.PrayerPoint  `json:"prayerPoints"`
 }
 
 func (h *PrayerSessionHandler) Create(
@@ -401,11 +414,27 @@ func (h *PrayerSessionHandler) List(
 		return
 	}
 
+	responses := make([]prayerSessionResponse, 0, len(sessions))
+
+	for _, item := range sessions {
+		responses = append(responses, prayerSessionResponse{
+			ID:             item.Session.ID,
+			PrayerGroupID:  item.Session.PrayerGroupID,
+			Title:          item.Session.Title,
+			Description:    item.Session.Description,
+			Date:           item.Session.Date,
+			Time:           item.Session.Time,
+			Duration:       item.Session.Duration,
+			PrayerPointIDs: item.Session.PrayerPointIDs,
+			PrayerPoints:   item.Points,
+		})
+    }
+
 	writeJSON(
 		w,
 		http.StatusOK,
 		map[string]any{
-			"prayerSessions": sessions,
+			"prayerSessions": responses,
 		},
 	)
 }

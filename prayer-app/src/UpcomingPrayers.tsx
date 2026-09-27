@@ -20,6 +20,7 @@ interface PrayerSession {
     id: string;
     prayerGroupID: string;
     title: string;
+    description: string;
     date: string;
     time: string;
     duration: number;
@@ -133,8 +134,7 @@ const UpcomingPrayers = ({
                                     variant="body-sm"
                                     color="muted"
                                 >
-                                    Join us for a time of prayer
-                                    and fellowship.
+                                    {prayer.description}
                                 </Typography>
 
                             </Stack>

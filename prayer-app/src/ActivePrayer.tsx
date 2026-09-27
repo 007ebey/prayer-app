@@ -14,6 +14,7 @@ interface PrayerSession {
     id: string;
     prayerGroupID: string;
     title: string;
+    description: string;
     date: string;
     time: string;
     duration: number;
@@ -49,7 +50,7 @@ const ActivePrayer = ({
                     variant="subtitle"
                     color="muted"
                 >
-                    Join believers praying together.
+                    {prayer.description}
                 </Typography>
 
                 <div className="flex flex-wrap items-center gap-6">

@@ -10,6 +10,7 @@ import (
 	"prayer-api/internal/domain/identity"
 	domain "prayer-api/internal/domain/prayersession"
 	domainuser "prayer-api/internal/domain/user"
+	"prayer-api/internal/domain/prayerpoint"
 )
 
 // ---------------------------------------------------------
@@ -20,7 +21,7 @@ type listPrayerSessionRepositoryStub struct {
 	sessionsByGroup map[identity.PrayerGroupID][]domain.PrayerSession
 	listErr         error
 
-	listCalled bool
+	listCalled  bool
 	calledGroups []identity.PrayerGroupID
 }
 
@@ -65,6 +66,33 @@ func (r *listPrayerSessionRepositoryStub) Delete(
 	id identity.PrayerSessionID,
 ) error {
 	return nil
+}
+
+// ---------------------------------------------------------
+// Prayer point repository stub
+// ---------------------------------------------------------
+
+type listPrayerPointRepositoryStub struct {
+	points map[identity.PrayerPointID]*prayerpoint.PrayerPoint
+
+	findErr   error
+	findCalled bool
+	calledIDs []identity.PrayerPointID
+}
+
+func (r *listPrayerPointRepositoryStub) FindByID(
+	ctx context.Context,
+	id identity.PrayerPointID,
+) (*prayerpoint.PrayerPoint, error) {
+
+	r.findCalled = true
+	r.calledIDs = append(r.calledIDs, id)
+
+	if r.findErr != nil {
+		return nil, r.findErr
+	}
+
+	return r.points[id], nil
 }
 
 // ---------------------------------------------------------
@@ -125,6 +153,7 @@ func newListTestSession(
 		id,
 		groupID,
 		"Morning Prayer",
+		"A random description",
 		testSessionDate(),
 		"07:00",
 		30,

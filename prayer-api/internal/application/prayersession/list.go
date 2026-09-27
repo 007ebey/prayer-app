@@ -4,14 +4,20 @@ import
 (
   domainuser "prayer-api/internal/domain/user"
   domain "prayer-api/internal/domain/prayersession"
+  "prayer-api/internal/domain/prayerpoint"
   "context"
   "prayer-api/internal/domain/identity"
 )
 
+type PrayerSessionWithPoints struct {
+	Session domain.PrayerSession
+	Points  []prayerpoint.PrayerPoint
+}
+
 func (s *Service) ListForUser(
 	ctx context.Context,
 	userID identity.UserID,
-) ([]domain.PrayerSession, error) {
+) ([]PrayerSessionWithPoints, error) {
 
 	// 1. Find the user.
 	u, err := s.users.FindByExternalID(ctx, userID.String())
@@ -23,20 +29,37 @@ func (s *Service) ListForUser(
 		return nil, domainuser.ErrUserNotFound
 	}
 
-	// 2. Get the groups the user has access to.
-	var allSessions []domain.PrayerSession
+	var result []PrayerSessionWithPoints
 
-	// 3. Get sessions for each group.
+	// 2. Get sessions for each group the user has access to.
 	for _, groupID := range u.PrayerGroupIDs {
 		sessions, err := s.sessions.ListByGroupID(ctx, groupID)
 		if err != nil {
 			return nil, err
 		}
 
-		// 4. Add those sessions to the user's complete session list.
-		allSessions = append(allSessions, sessions...)
+		for _, session := range sessions {
+			var points []prayerpoint.PrayerPoint
+
+			// 3. Resolve the prayer point IDs.
+			for _, pointID := range session.PrayerPointIDs {
+				point, err := s.prayerPoints.FindByID(ctx, pointID)
+				if err != nil {
+					return nil, err
+				}
+
+				if point != nil {
+					points = append(points, *point)
+				}
+			}
+
+			// 4. Combine the session with its resolved points.
+			result = append(result, PrayerSessionWithPoints{
+				Session: session,
+				Points:  points,
+			})
+		}
 	}
 
-	// 5. Return all sessions across all accessible groups.
-	return allSessions, nil
+	return result, nil
 }

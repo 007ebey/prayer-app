@@ -3,6 +3,7 @@ package prayersession
 import (
 	"context"
 	"prayer-api/internal/domain/identity"
+	"prayer-api/internal/domain/prayerpoint"
 	domain "prayer-api/internal/domain/prayersession"
 	domainuser "prayer-api/internal/domain/user"
 )
@@ -39,4 +40,11 @@ type UserRepository interface {
 	Save(ctx context.Context, u *domainuser.User) error
 	FindByEmail(ctx context.Context, email string) (*domainuser.User, error)
 	Update(ctx context.Context, u *domainuser.User) error
+}
+
+type PrayerPointRepository interface {
+	FindByID(
+		ctx context.Context,
+		id identity.PrayerPointID,
+	) (*prayerpoint.PrayerPoint, error)
 }

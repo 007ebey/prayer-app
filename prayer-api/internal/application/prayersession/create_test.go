@@ -508,4 +508,41 @@ func TestService_Create(t *testing.T) {
 		assert.Nil(t, session)
 		assert.ErrorIs(t, err, saveErr)
 	})
+
+	t.Run("trims description before creating session", func(t *testing.T) {
+		t.Parallel()
+
+		user := &domainuser.User{
+			ID:             validActorID,
+			PrayerGroupIDs: []identity.PrayerGroupID{validGroupID},
+		}
+
+		userRepo := &createUserRepositoryStub{
+			user: user,
+		}
+
+		sessionRepo := &createPrayerSessionRepositoryStub{}
+
+		service := &Service{
+			users:    userRepo,
+			sessions: sessionRepo,
+		}
+
+		cmd := validCommand
+		cmd.Description = "  Join us for a time of prayer.  "
+
+		session, err := service.Create(
+			context.Background(),
+			cmd,
+		)
+
+		require.NoError(t, err)
+		require.NotNil(t, session)
+
+		assert.Equal(
+			t,
+			"Join us for a time of prayer.",
+			session.Description,
+		)
+    })
 }

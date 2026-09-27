@@ -3,6 +3,7 @@ package prayersession
 import (
 	"context"
 	"strings"
+
 	"prayer-api/internal/domain/identity"
 	domain "prayer-api/internal/domain/prayersession"
 )
@@ -31,17 +32,19 @@ func (s *Service) Create(
 		return nil, ErrInvalidDuration
 	}
 
-	u, err := s.users.FindByExternalID(ctx, strings.TrimSpace(cmd.ActorID.String()))
+	u, err := s.users.FindByExternalID(
+		ctx,
+		strings.TrimSpace(cmd.ActorID.String()),
+	)
 	if err != nil {
 		return nil, ErrUnknown
 	}
+
 	if u == nil {
 		return nil, ErrUserNotFound
 	}
 
-	if !u.HasPrayerGroup(
-		cmd.PrayerGroupID,
-	) {
+	if !u.HasPrayerGroup(cmd.PrayerGroupID) {
 		return nil, ErrForbidden
 	}
 
@@ -49,12 +52,12 @@ func (s *Service) Create(
 		identity.PrayerSessionID("session-generated"),
 		cmd.PrayerGroupID,
 		strings.TrimSpace(cmd.Title),
+		strings.TrimSpace(cmd.Description),
 		cmd.Date,
 		strings.TrimSpace(cmd.Time),
 		cmd.Duration,
 		cmd.PrayerPointIDs,
 	)
-	
 	if err != nil {
 		return nil, ErrUnknown
 	}
@@ -65,5 +68,3 @@ func (s *Service) Create(
 
 	return session, nil
 }
-
-

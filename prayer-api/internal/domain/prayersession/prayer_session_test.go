@@ -16,6 +16,7 @@ func TestNewPrayerSession(t *testing.T) {
 	validID := identity.PrayerSessionID("session-1")
 	validGroupID := identity.PrayerGroupID("group-1")
 	validTitle := "Morning Prayer"
+	validDescription := "Join us for a time of prayer and fellowship."
 	validDate := time.Date(2026, 9, 18, 0, 0, 0, 0, time.UTC)
 	validTime := "07:00"
 	validDuration := 60
@@ -31,6 +32,7 @@ func TestNewPrayerSession(t *testing.T) {
 			validID,
 			validGroupID,
 			validTitle,
+			validDescription,
 			validDate,
 			validTime,
 			validDuration,
@@ -43,6 +45,7 @@ func TestNewPrayerSession(t *testing.T) {
 		assert.Equal(t, validID, session.ID)
 		assert.Equal(t, validGroupID, session.PrayerGroupID)
 		assert.Equal(t, validTitle, session.Title)
+		assert.Equal(t, validDescription, session.Description)
 		assert.Equal(t, validDate, session.Date)
 		assert.Equal(t, validTime, session.Time)
 		assert.Equal(t, validDuration, session.Duration)
@@ -56,6 +59,7 @@ func TestNewPrayerSession(t *testing.T) {
 			"",
 			validGroupID,
 			validTitle,
+			validDescription,
 			validDate,
 			validTime,
 			validDuration,
@@ -73,6 +77,7 @@ func TestNewPrayerSession(t *testing.T) {
 			"   ",
 			validGroupID,
 			validTitle,
+			validDescription,
 			validDate,
 			validTime,
 			validDuration,
@@ -90,6 +95,7 @@ func TestNewPrayerSession(t *testing.T) {
 			validID,
 			"",
 			validTitle,
+			validDescription,
 			validDate,
 			validTime,
 			validDuration,
@@ -107,6 +113,7 @@ func TestNewPrayerSession(t *testing.T) {
 			validID,
 			"   ",
 			validTitle,
+			validDescription,
 			validDate,
 			validTime,
 			validDuration,
@@ -124,6 +131,7 @@ func TestNewPrayerSession(t *testing.T) {
 			validID,
 			validGroupID,
 			"",
+			validDescription,
 			validDate,
 			validTime,
 			validDuration,
@@ -141,6 +149,7 @@ func TestNewPrayerSession(t *testing.T) {
 			validID,
 			validGroupID,
 			"   ",
+			validDescription,
 			validDate,
 			validTime,
 			validDuration,
@@ -158,6 +167,7 @@ func TestNewPrayerSession(t *testing.T) {
 			validID,
 			validGroupID,
 			"  Morning Prayer  ",
+			validDescription,
 			validDate,
 			validTime,
 			validDuration,
@@ -168,6 +178,48 @@ func TestNewPrayerSession(t *testing.T) {
 		assert.Equal(t, "Morning Prayer", session.Title)
 	})
 
+	t.Run("trims description", func(t *testing.T) {
+		t.Parallel()
+
+		session, err := New(
+			validID,
+			validGroupID,
+			validTitle,
+			"  Join us for a time of prayer.  ",
+			validDate,
+			validTime,
+			validDuration,
+			validPrayerPointIDs,
+		)
+
+		require.NoError(t, err)
+		assert.Equal(
+			t,
+			"Join us for a time of prayer.",
+			session.Description,
+		)
+	})
+
+	t.Run("allows empty description", func(t *testing.T) {
+		t.Parallel()
+
+		session, err := New(
+			validID,
+			validGroupID,
+			validTitle,
+			"",
+			validDate,
+			validTime,
+			validDuration,
+			validPrayerPointIDs,
+		)
+
+		require.NoError(t, err)
+		require.NotNil(t, session)
+
+		assert.Empty(t, session.Description)
+	})
+
 	t.Run("requires a date", func(t *testing.T) {
 		t.Parallel()
 
@@ -175,6 +227,7 @@ func TestNewPrayerSession(t *testing.T) {
 			validID,
 			validGroupID,
 			validTitle,
+			validDescription,
 			time.Time{},
 			validTime,
 			validDuration,
@@ -192,6 +245,7 @@ func TestNewPrayerSession(t *testing.T) {
 			validID,
 			validGroupID,
 			validTitle,
+			validDescription,
 			validDate,
 			validTime,
 			0,
@@ -209,6 +263,7 @@ func TestNewPrayerSession(t *testing.T) {
 			validID,
 			validGroupID,
 			validTitle,
+			validDescription,
 			validDate,
 			validTime,
 			-10,
@@ -226,6 +281,7 @@ func TestNewPrayerSession(t *testing.T) {
 			validID,
 			validGroupID,
 			validTitle,
+			validDescription,
 			validDate,
 			"  07:00  ",
 			validDuration,
@@ -248,6 +304,7 @@ func TestNewPrayerSession(t *testing.T) {
 			validID,
 			validGroupID,
 			validTitle,
+			validDescription,
 			validDate,
 			validTime,
 			validDuration,
@@ -274,6 +331,7 @@ func TestNewPrayerSession(t *testing.T) {
 			validID,
 			validGroupID,
 			validTitle,
+			validDescription,
 			validDate,
 			validTime,
 			validDuration,

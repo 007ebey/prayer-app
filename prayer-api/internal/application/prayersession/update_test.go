@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
 	"prayer-api/internal/domain/identity"
+	"prayer-api/internal/domain/prayerpoint"
 	domain "prayer-api/internal/domain/prayersession"
 	domainuser "prayer-api/internal/domain/user"
 )
@@ -19,11 +19,11 @@ import (
 // ---------------------------------------------------------
 
 type updatePrayerSessionRepositoryStub struct {
-	session    *domain.PrayerSession
-	findErr    error
-	updateErr  error
-	saved      *domain.PrayerSession
-	findCalled bool
+	session      *domain.PrayerSession
+	findErr      error
+	updateErr    error
+	saved        *domain.PrayerSession
+	findCalled   bool
 	updateCalled bool
 }
 
@@ -69,6 +69,19 @@ func (r *updatePrayerSessionRepositoryStub) Delete(
 	id identity.PrayerSessionID,
 ) error {
 	return nil
+}
+
+// ---------------------------------------------------------
+// Prayer point repository stub
+// ---------------------------------------------------------
+
+type updatePrayerPointRepositoryStub struct{}
+
+func (r *updatePrayerPointRepositoryStub) FindByID(
+	ctx context.Context,
+	id identity.PrayerPointID,
+) (*prayerpoint.PrayerPoint, error) {
+	return nil, nil
 }
 
 // ---------------------------------------------------------
@@ -167,7 +180,11 @@ func TestService_Update_Success(t *testing.T) {
 		user: user,
 	}
 
-	service := NewService(sessions, users)
+	service := NewService(
+		sessions,
+		users,
+		&updatePrayerPointRepositoryStub{},
+	)
 
 	result, err := service.Update(
 		context.Background(),
@@ -224,7 +241,11 @@ func TestService_Update_SessionNotFound(t *testing.T) {
 
 	users := &updateUserRepositoryStub{}
 
-	service := NewService(sessions, users)
+	service := NewService(
+		sessions,
+		users,
+		&updatePrayerPointRepositoryStub{},
+	)
 
 	result, err := service.Update(
 		context.Background(),
@@ -265,7 +286,11 @@ func TestService_Update_FindSessionError(t *testing.T) {
 
 	users := &updateUserRepositoryStub{}
 
-	service := NewService(sessions, users)
+	service := NewService(
+		sessions,
+		users,
+		&updatePrayerPointRepositoryStub{},
+	)
 
 	result, err := service.Update(
 		context.Background(),
@@ -312,7 +337,11 @@ func TestService_Update_UserNotFound(t *testing.T) {
 		user: nil,
 	}
 
-	service := NewService(sessions, users)
+	service := NewService(
+		sessions,
+		users,
+		&updatePrayerPointRepositoryStub{},
+	)
 
 	result, err := service.Update(
 		context.Background(),
@@ -361,7 +390,11 @@ func TestService_Update_UserRepositoryError(t *testing.T) {
 		findErr: repoErr,
 	}
 
-	service := NewService(sessions, users)
+	service := NewService(
+		sessions,
+		users,
+		&updatePrayerPointRepositoryStub{},
+	)
 
 	result, err := service.Update(
 		context.Background(),
@@ -414,7 +447,11 @@ func TestService_Update_Forbidden(t *testing.T) {
 		user: user,
 	}
 
-	service := NewService(sessions, users)
+	service := NewService(
+		sessions,
+		users,
+		&updatePrayerPointRepositoryStub{},
+	)
 
 	result, err := service.Update(
 		context.Background(),
@@ -470,7 +507,11 @@ func TestService_Update_UpdateRepositoryError(t *testing.T) {
 		user: user,
 	}
 
-	service := NewService(sessions, users)
+	service := NewService(
+		sessions,
+		users,
+		&updatePrayerPointRepositoryStub{},
+	)
 
 	result, err := service.Update(
 		context.Background(),

@@ -115,7 +115,7 @@ type listPrayerSessionServiceMock struct {
 	listFn func(
 		ctx context.Context,
 		userID domainid.UserID,
-	) ([]domain.PrayerSession, error)
+	) ([]appprayersession.PrayerSessionWithPoints, error)
 
 	called bool
 	userID domainid.UserID
@@ -124,15 +124,10 @@ type listPrayerSessionServiceMock struct {
 func (m *listPrayerSessionServiceMock) ListForUser(
 	ctx context.Context,
 	userID domainid.UserID,
-) ([]domain.PrayerSession, error) {
+) ([]appprayersession.PrayerSessionWithPoints, error) {
 	m.called = true
 	m.userID = userID
-
-	if m.listFn != nil {
-		return m.listFn(ctx, userID)
-	}
-
-	return nil, nil
+	return m.listFn(ctx, userID)
 }
 
 // ------------------------------------------------------------
@@ -775,22 +770,36 @@ func TestPrayerSessionHandler_List_Unauthorized(t *testing.T) {
 }
 
 func TestPrayerSessionHandler_List_Success(t *testing.T) {
-	expectedSessions := []domain.PrayerSession{
+	expectedSessions := []appprayersession.PrayerSessionWithPoints{
 		{
-			ID:            domainid.PrayerSessionID("session-1"),
-			PrayerGroupID: domainid.PrayerGroupID("group-1"),
-			Title:         "Morning Prayer",
-			Date:          time.Date(2026, 9, 20, 0, 0, 0, 0, time.UTC),
-			Time:          "07:00",
-			Duration:      30,
+			Session: domain.PrayerSession{
+				ID:            domainid.PrayerSessionID("session-1"),
+				PrayerGroupID: domainid.PrayerGroupID("group-1"),
+				Title:         "Morning Prayer",
+				Description:   "A time for morning prayers and reflection.",
+				Date:          time.Date(2026, 9, 20, 0, 0, 0, 0, time.UTC),
+				Time:          "07:00",
+				Duration:      30,
+				PrayerPointIDs: []domainid.PrayerPointID{
+					"point-1",
+				},
+			},
+			Points: nil,
 		},
 		{
-			ID:            domainid.PrayerSessionID("session-2"),
-			PrayerGroupID: domainid.PrayerGroupID("group-2"),
-			Title:         "Evening Prayer",
-			Date:          time.Date(2026, 9, 20, 0, 0, 0, 0, time.UTC),
-			Time:          "19:30",
-			Duration:      60,
+			Session: domain.PrayerSession{
+				ID:            domainid.PrayerSessionID("session-2"),
+				PrayerGroupID: domainid.PrayerGroupID("group-2"),
+				Title:         "Evening Prayer",
+				Description:   "A time for evening prayers and reflection.",
+				Date:          time.Date(2026, 9, 20, 0, 0, 0, 0, time.UTC),
+				Time:          "19:30",
+				Duration:      60,
+				PrayerPointIDs: []domainid.PrayerPointID{
+					"point-2",
+				},
+			},
+			Points: nil,
 		},
 	}
 
@@ -798,7 +807,7 @@ func TestPrayerSessionHandler_List_Success(t *testing.T) {
 		listFn: func(
 			ctx context.Context,
 			userID domainid.UserID,
-		) ([]domain.PrayerSession, error) {
+		) ([]appprayersession.PrayerSessionWithPoints, error) {
 			return expectedSessions, nil
 		},
 	}
@@ -844,7 +853,7 @@ func TestPrayerSessionHandler_List_UserNotFound(t *testing.T) {
 		listFn: func(
 			ctx context.Context,
 			userID domainid.UserID,
-		) ([]domain.PrayerSession, error) {
+		) ([]appprayersession.PrayerSessionWithPoints, error) {
 			return nil, domainuser.ErrUserNotFound
 		},
 	}
@@ -878,7 +887,7 @@ func TestPrayerSessionHandler_List_InternalError(t *testing.T) {
 		listFn: func(
 			ctx context.Context,
 			userID domainid.UserID,
-		) ([]domain.PrayerSession, error) {
+		) ([]appprayersession.PrayerSessionWithPoints, error) {
 			return nil, errors.New("repository failure")
 		},
 	}

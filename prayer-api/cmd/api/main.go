@@ -30,6 +30,7 @@ func main() {
 	groups := memory.NewPrayerGroupRepository()
 	ids := memory.NewIDGenerator()
 	prayerSessions := memory.NewPrayerSessionRepository()
+	prayerPoints := memory.NewPrayerPointRepository()
 
 	// claims, ok := clerk.SessionClaimsFromContext(r.Context())
 
@@ -120,6 +121,7 @@ func main() {
 	prayerSessionService := appprayersession.NewService(
 		prayerSessions,
 		users,
+		prayerPoints,
 	)
 
 	prayerSessionHandler := httpapi.NewPrayerSessionHandler(
