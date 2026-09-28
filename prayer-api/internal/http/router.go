@@ -12,6 +12,7 @@ func NewRouter(
 	userRoles *UserRoleHandler,
 	prayerGroupHandler *PrayerGroupHandler,
 	prayerSessionHandler *PrayerSessionHandler,
+	presenceHandler *PresenceHandler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -120,6 +121,20 @@ func NewRouter(
 		"DELETE /api/prayer-sessions/{sessionID}",
 		clerkhttp.RequireHeaderAuthorization()(
 			http.HandlerFunc(prayerSessionHandler.Delete),
+		),
+	)
+
+	mux.Handle(
+		"POST /api/prayer-sessions/{sessionID}/heartbeat",
+		clerkhttp.RequireHeaderAuthorization()(
+			http.HandlerFunc(presenceHandler.Heartbeat),
+		),
+	)
+
+	mux.Handle(
+		"GET /api/prayer-sessions/{sessionID}/participants",
+		clerkhttp.RequireHeaderAuthorization()(
+			http.HandlerFunc(presenceHandler.ListParticipants),
 		),
 	)
 

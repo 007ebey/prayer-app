@@ -14,44 +14,13 @@ import {
 import { useState } from "react";
 import PrayerParticipantList from "../../PrayerParticipantList";
 
-interface PrayerWallProps {
-    onLeave: () => void;
-}
+import type { PrayerWallProps } from "./PrayerWall.types";
 
-
-
-const prayerPoints = [
-    {
-        id: 1,
-        title: "Pray for families",
-        description:
-            "Pray for unity, restoration, wisdom, and peace in families.",
-    },
-    {
-        id: 2,
-        title: "Pray for those who need healing",
-        description:
-            "Remember those facing sickness, pain, and difficult circumstances.",
-    },
-    {
-        id: 3,
-        title: "Pray for young people",
-        description:
-            "Pray for students and young adults as they make important decisions.",
-    },
-    {
-        id: 4,
-        title: "Pray for our communities",
-        description:
-            "Pray for peace, compassion, and opportunities to serve others.",
-    },
-];
 
 const PrayerWall = ({
+    session,
     onLeave,
 }: PrayerWallProps) => {
-
-   
 
     const [participants, setParticipants] =
         useState([
@@ -189,62 +158,61 @@ const PrayerWall = ({
                 </div>
 
 
-                <div className="grid gap-4">
-
-                    {prayerPoints.map(
+                 <div className="grid gap-4">
+                    {(session.prayerPoints ?? []).map(
                         (prayer, index) => (
-
                             <Surface
-                                key={prayer.id}
+                                key={prayer.ID}
                                 elevation="raised"
                                 padding="lg"
                                 radius="lg"
                             >
-
                                 <div className="flex gap-4">
-
                                     {/* Number */}
-
-                                    <div className="
-                                        flex h-10 w-10
-                                        shrink-0
-                                        items-center
-                                        justify-center
-                                        rounded-full
-                                        bg-primary
-                                        text-primary-foreground
-                                        font-semibold
-                                    ">
+                                    <div
+                                        className="
+                                            flex h-10 w-10
+                                            shrink-0
+                                            items-center
+                                            justify-center
+                                            rounded-full
+                                            bg-primary
+                                            text-primary-foreground
+                                            font-semibold
+                                        "
+                                    >
                                         {index + 1}
                                     </div>
 
-
                                     {/* Content */}
-
                                     <Stack gap="sm">
-
                                         <Typography variant="h3">
-                                            {prayer.title}
+                                            {prayer.Title}
                                         </Typography>
 
                                         <Typography
                                             variant="body"
                                             color="muted"
                                         >
-                                            {prayer.description}
+                                            {prayer.Content}
                                         </Typography>
-
                                     </Stack>
-
                                 </div>
-
                             </Surface>
-
                         )
                     )}
 
+                    {session.prayerPoints?.length === 0 && (
+                        <Typography
+                            variant="body"
+                            color="muted"
+                        >
+                            No prayer points have been added to this session yet.
+                        </Typography>
+                    )}
                 </div>
-
+            
+            
             </Stack>
 
 

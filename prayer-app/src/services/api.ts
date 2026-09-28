@@ -2,14 +2,26 @@ import axios, { type AxiosError, type AxiosResponse } from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
+export interface PrayerPoint {
+    ID: string;
+    GroupID: string;
+    Title: string;
+    Content: string;
+    Status: string;
+    CreatedAt: string;
+    UpdatedAt: string;
+}
+
 export interface PrayerSession {
-  id: string;
-  prayerGroupID: string;
-  title: string;
-  date: string;
-  time: string;
-  duration: number;
-  prayerPointIDs?: string[];
+    id: string;
+    prayerGroupID: string;
+    title: string;
+    description: string;
+    date: string;
+    time: string;
+    duration: number;
+    prayerPointIDs?: string[];
+    prayerPoints: PrayerPoint[];
 }
 
 export interface PrayerSessionsResponse {
