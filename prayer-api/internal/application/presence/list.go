@@ -6,9 +6,27 @@ import (
     "time"
 
     "prayer-api/internal/domain/identity"
-    domain "prayer-api/internal/domain/presence"
     domainuser "prayer-api/internal/domain/user"
+	domainpresence "prayer-api/internal/domain/presence"
 )
+
+type Repository interface {
+	Find(
+		ctx context.Context,
+		sessionID identity.PrayerSessionID,
+		userID identity.UserID,
+	) (*domainpresence.Presence, error)
+
+	Save(
+		ctx context.Context,
+		presence *domainpresence.Presence,
+	) error
+
+    ListBySessionID(
+        ctx context.Context,
+        sessionID identity.PrayerSessionID,
+    ) ([]*domainpresence.Presence, error)
+}
 
 type UserFinder interface {
     FindByID(

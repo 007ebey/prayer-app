@@ -5,21 +5,38 @@ import (
     "encoding/json"
     "net/http"
     "strings"
-
+    "context"
     "github.com/clerk/clerk-sdk-go/v2"
 
-    "prayer-api/internal/application/presence"
     "prayer-api/internal/domain/identity"
+    domainpresence "prayer-api/internal/domain/presence"
+    presenceapp "prayer-api/internal/application/presence"
 )
 
-type PresenceHandler struct {
-    heartbeat          *presence.HeartbeatService
-    listParticipants   *presence.ListParticipantsService
+type HeartbeatExecutor interface {
+	Execute(
+		ctx context.Context,
+		sessionID identity.PrayerSessionID,
+		userID identity.UserID,
+	) (*domainpresence.Presence, error)
 }
 
+type ParticipantsLister interface {
+	Execute(
+		ctx context.Context,
+		sessionID identity.PrayerSessionID,
+	) ([]presenceapp.Participant, error)
+}
+
+
+type PresenceHandler struct {
+    heartbeat          HeartbeatExecutor
+    listParticipants   ParticipantsLister
+}
+ 
 func NewPresenceHandler(
-    heartbeat *presence.HeartbeatService,
-    listParticipants *presence.ListParticipantsService,
+	heartbeat HeartbeatExecutor,
+	listParticipants ParticipantsLister,
 ) *PresenceHandler {
     return &PresenceHandler{
         heartbeat:        heartbeat,

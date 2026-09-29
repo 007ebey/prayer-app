@@ -5,29 +5,40 @@ import (
     "context"
 
     "prayer-api/internal/domain/identity"
-    domain "prayer-api/internal/domain/presence"
+	domainSession "prayer-api/internal/domain/prayersession"
+	domainUser "prayer-api/internal/domain/user"
 )
 
-type Repository interface {
-    Save(
-        ctx context.Context,
-        presence *domain.Presence,
-    ) error
+type PrayerSessionRepository interface {
+	FindByID(
+		ctx context.Context,
+		id identity.PrayerSessionID,
+	) (*domainSession.PrayerSession, error)
 
-    Find(
-        ctx context.Context,
-        sessionID identity.PrayerSessionID,
-        userID identity.UserID,
-    ) (*domain.Presence, error)
+	ListByGroupID(
+		ctx context.Context,
+		groupID identity.PrayerGroupID,
+	) ([]domainSession.PrayerSession, error)
 
-    ListBySessionID(
-        ctx context.Context,
-        sessionID identity.PrayerSessionID,
-    ) ([]*domain.Presence, error)
+	Save(
+		ctx context.Context,
+		session *domainSession.PrayerSession,
+	) error
 
-    Delete(
-        ctx context.Context,
-        sessionID identity.PrayerSessionID,
-        userID identity.UserID,
-    ) error
+	Update(
+		ctx context.Context,
+		session *domainSession.PrayerSession,
+	) error
+
+	Delete(
+		ctx context.Context,
+		id identity.PrayerSessionID,
+	) error
+}
+
+type UserRepository interface {
+	FindByExternalID(ctx context.Context, externalID string) (*domainUser.User, error)
+	Save(ctx context.Context, u *domainUser.User) error
+	FindByEmail(ctx context.Context, email string) (*domainUser.User, error)
+	Update(ctx context.Context, u *domainUser.User) error
 }

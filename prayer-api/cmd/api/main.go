@@ -5,10 +5,11 @@ import (
 	"net/http"
 
 	"github.com/clerk/clerk-sdk-go/v2"
-
+    "time"
 	appauth "prayer-api/internal/application/auth"
 	appprayergroup "prayer-api/internal/application/prayergroup"
 	appprayersession "prayer-api/internal/application/prayersession"
+	presence "prayer-api/internal/application/presence"
 	"prayer-api/internal/application/userprofile"
 	"prayer-api/internal/application/userrole"
 	identityauth "prayer-api/internal/auth"
@@ -31,6 +32,7 @@ func main() {
 	ids := memory.NewIDGenerator()
 	prayerSessions := memory.NewPrayerSessionRepository()
 	prayerPoints := memory.NewPrayerPointRepository()
+	heartBeats := memory.NewPresenceRepository()
 
 	// claims, ok := clerk.SessionClaimsFromContext(r.Context())
 
@@ -50,6 +52,11 @@ func main() {
 	userRoleService := userrole.NewService(
 		users,
 		roles,
+	)
+
+	sessionValidator := presence.NewSessionValidator(
+		prayerSessions,
+		users,
 	)
 
 	identityProvider := identityauth.NewClerkProvider()
@@ -103,6 +110,17 @@ func main() {
 	    roles,
 	)
 
+	heartbeatService	 := presence.NewHeartbeatService(
+		heartBeats,
+		sessionValidator,
+	)
+
+	listParticipantsService := presence.NewListParticipantsService(
+		heartBeats,
+		users,
+		5*time.Minute,
+	)
+
     prayerGroupHandler := httpapi.NewPrayerGroupHandler(
 	    prayerGroupCreateService,
 	    prayerGroupListService,
@@ -139,12 +157,18 @@ func main() {
 		userRoleService,
 	)
 
+	presenceHandler := httpapi.NewPresenceHandler(
+	   heartbeatService,
+	   listParticipantsService,
+	)
+
 	router := httpapi.NewRouter(
 		authHandler,
 		userHandler,
 		userRoleHandler,
 		prayerGroupHandler,
 		prayerSessionHandler,
+		presenceHandler,
 	)
 
 	address := ":" + cfg.Port

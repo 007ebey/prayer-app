@@ -9,23 +9,15 @@ import (
     domain "prayer-api/internal/domain/presence"
 )
 
-type SessionValidator interface {
-    CanJoin(
-        ctx context.Context,
-        sessionID identity.PrayerSessionID,
-        userID identity.UserID,
-    ) error
-}
-
 type HeartbeatService struct {
     repo      Repository
-    validator SessionValidator
+    validator SessionAccessValidator
     now       func() time.Time
 }
 
 func NewHeartbeatService(
     repo Repository,
-    validator SessionValidator,
+    validator SessionAccessValidator,
 ) *HeartbeatService {
     return &HeartbeatService{
         repo:      repo,

@@ -14,9 +14,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	apppresence "prayer-api/internal/application/presence"
 	domain "prayer-api/internal/domain/presence"
 	domainid "prayer-api/internal/domain/identity"
+	applicationpresence "prayer-api/internal/application/presence"
 )
 
 type mockHeartbeatService struct {
@@ -39,16 +39,14 @@ type mockListParticipantsService struct {
 	executeFn func(
 		context.Context,
 		domainid.PrayerSessionID,
-		domainid.UserID,
-	) ([]domain.Presence, error)
+	) ([]applicationpresence.Participant, error)
 }
 
 func (m *mockListParticipantsService) Execute(
 	ctx context.Context,
 	sessionID domainid.PrayerSessionID,
-	userID domainid.UserID,
-) ([]domain.Presence, error) {
-	return m.executeFn(ctx, sessionID, userID)
+) ([]applicationpresence.Participant, error) {
+	return m.executeFn(ctx, sessionID)
 }
 
 func presenceRequestWithClaims(
@@ -215,8 +213,7 @@ func TestPresenceHandler_ListParticipants_MissingSessionID(t *testing.T) {
 		executeFn: func(
 			context.Context,
 			domainid.PrayerSessionID,
-			domainid.UserID,
-		) ([]domain.Presence, error) {
+		) ([]applicationpresence.Participant, error) {
 			t.Fatal("service should not be called")
 			return nil, nil
 		},
@@ -251,20 +248,18 @@ func TestPresenceHandler_ListParticipants_Success(t *testing.T) {
 		executeFn: func(
 			ctx context.Context,
 			sessionID domainid.PrayerSessionID,
-			userID domainid.UserID,
-		) ([]domain.Presence, error) {
+		) ([]applicationpresence.Participant, error) {
 			assert.Equal(t, "session-1", string(sessionID))
-			assert.Equal(t, "user-123", string(userID))
 
-			return []domain.Presence{
+			return []applicationpresence.Participant{
 				{
-					SessionID: "session-1",
-					UserID:    "user-123",
+					UserID: "user-123",
+					Name:   "User One",
 					LastSeen:  lastSeen1,
 				},
 				{
-					SessionID: "session-1",
 					UserID:    "user-456",
+					Name:      "User Two",
 					LastSeen:  lastSeen2,
 				},
 			}, nil
@@ -308,8 +303,7 @@ func TestPresenceHandler_ListParticipants_ServiceError(t *testing.T) {
 		executeFn: func(
 			context.Context,
 			domainid.PrayerSessionID,
-			domainid.UserID,
-		) ([]domain.Presence, error) {
+		) ([]applicationpresence.Participant, error) {
 			return nil, errors.New("database error")
 		},
 	}
